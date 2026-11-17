@@ -1,0 +1,41 @@
+py-mir-toolbox
+==============
+
+py-mir-toolbox is a Python port of MIRtoolbox. Its code is translated from
+MiningSuite, the BSD-licensed successor of MIRtoolbox.
+
+MiningSuite
+-----------
+Copyright (C) 2014-2015, 2017-2018 Olivier Lartillot and the MiningSuite contributors.
+Licensed under the BSD 3-Clause License (see reference/miningsuite/LICENSE.txt).
+Upstream: https://github.com/olivierlar/miningsuite (commit 7b3e4688b2b33e1d3b8c580c95e518457a4ee627)
+Packages used: +sig, +aud, +mus
+
+MIRtoolbox
+----------
+MIRtoolbox 1.8.2, Copyright (C) 2023 Olivier Lartillot, University of Jyväskylä,
+University of Geneva, University of Oslo. Developed by Olivier Lartillot,
+Petri Toiviainen, Pasi Saari et al. Licensed under GPL-2.0.
+Upstream: https://github.com/olivierlar/mirtoolbox
+
+MIRtoolbox source code is NOT included in or translated into this package.
+MIRtoolbox 1.8.2 is used only as a numerical reference: outputs are compared
+against it in the validation suite. The MIRtoolbox manual is used as documentation.
+
+Data files
+----------
+Key profiles (gomezprofs.mat) and the key self-organizing map
+(keysomaudiodata.mat) come from MiningSuite (+mus) under its BSD license.
+
+Citing
+------
+If you use py-mir-toolbox in academic work, please also cite the original MIRtoolbox:
+
+  Lartillot, O., & Toiviainen, P. (2007). A Matlab toolbox for musical feature
+  extraction from audio. Proceedings of the 10th International Conference on
+  Digital Audio Effects (DAFx-07), Bordeaux, France.
+
+  Lartillot, O., Toiviainen, P., & Eerola, T. (2008). A Matlab toolbox for music
+  information retrieval. In C. Preisach, H. Burkhardt, L. Schmidt-Thieme, &
+  R. Decker (Eds.), Data Analysis, Machine Learning and Applications
+  Springer.

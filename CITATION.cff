@@ -1,0 +1,49 @@
+cff-version: 1.2.0
+message: "If you use py-mir-toolbox, please cite it and the original MIRtoolbox papers listed under references."
+title: "py-mir-toolbox: a Python port of MIRtoolbox"
+type: software
+authors:
+  - family-names: "Gómez-Cañón"
+    given-names: "Juan Sebastián"
+license: BSD-3-Clause
+repository-code: "https://github.com/juansgomez87/py-mir-toolbox"
+url: "https://ccrma.stanford.edu/~jsgomezc/py-mir-toolbox"
+keywords:
+  - music information retrieval
+  - music psychology
+  - audio feature extraction
+  - MIRtoolbox
+references:
+  - type: conference-paper
+    title: "A Matlab Toolbox for Musical Feature Extraction from Audio"
+    authors:
+      - family-names: "Lartillot"
+        given-names: "Olivier"
+      - family-names: "Toiviainen"
+        given-names: "Petri"
+    collection-title: "Proceedings of the 10th International Conference on Digital Audio Effects (DAFx-07)"
+    conference:
+      name: "DAFx-07"
+      city: "Bordeaux"
+      country: "FR"
+    year: 2007
+  - type: book-section
+    title: "A Matlab Toolbox for Music Information Retrieval"
+    authors:
+      - family-names: "Lartillot"
+        given-names: "Olivier"
+      - family-names: "Toiviainen"
+        given-names: "Petri"
+      - family-names: "Eerola"
+        given-names: "Tuomas"
+    collection-title: "Data Analysis, Machine Learning and Applications"
+    publisher:
+      name: "Springer"
+    year: 2008
+  - type: software
+    title: "MiningSuite"
+    authors:
+      - family-names: "Lartillot"
+        given-names: "Olivier"
+    license: BSD-3-Clause
+    repository-code: "https://github.com/olivierlar/miningsuite"
