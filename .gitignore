@@ -1,0 +1,31 @@
+# Original MIRtoolbox (GPL-2.0, ~86 MB with binaries): reading reference only, never committed
+reference/MIRtoolbox1.8.2/
+
+# Private outreach drafts
+drafts/
+
+# Interactive website: deployed to CCRMA only (make deploy), not published on GitHub
+site/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# Docs
+docs/_build/
+docs/jupyter_execute/
+
+# Validation fixtures live in a separate repository
+validation/fixtures/
+
+.DS_Store
+src/mirpy/_version.py
+_site/
+docs/generated/
