@@ -1,0 +1,45 @@
+name: Generate MIRtoolbox fixtures
+
+# Started by hand: downloads the MATLAB Runtime (several GB) and runs
+# MIRtoolbox 1.8.2 through pymirtoolbox. See validation/README.md.
+on:
+  workflow_dispatch:
+    inputs:
+      runtime_url:
+        description: "URL of the MATLAB Runtime R2025b installer zip for glnxa64 (from mathworks.com)"
+        required: true
+      audio_dir:
+        description: "Directory of WAV files in this repository to analyse"
+        required: true
+        default: "validation/audio"
+
+permissions:
+  contents: read
+
+env:
+  RUNTIME_ROOT: /usr/local/MATLAB/MATLAB_Runtime/R2025b
+
+jobs:
+  fixtures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install MATLAB Runtime
+        run: |
+          wget -q -O runtime.zip "${{ inputs.runtime_url }}"
+          unzip -qq -d runtime runtime.zip
+          sudo ./runtime/install -agreeToLicense yes
+          for d in runtime/glnxa64 bin/glnxa64 sys/os/glnxa64 extern/bin/glnxa64; do
+            echo "LD_LIBRARY_PATH=${RUNTIME_ROOT}/$d:${LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+          done
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install pymirtoolbox
+        run: pip install numpy git+https://github.com/frshdjfry/pymirtoolbox
+      - name: Generate fixtures
+        run: python validation/generate_fixtures.py --audio-dir "${{ inputs.audio_dir }}" --out-dir validation/fixtures
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mirtoolbox-1.8.2-fixtures
+          path: validation/fixtures/
