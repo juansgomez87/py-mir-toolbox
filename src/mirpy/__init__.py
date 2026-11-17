@@ -9,10 +9,13 @@ Use :func:`mirpy.cite` to print the references to cite.
 """
 
 from mirpy._cite import cite
+from mirpy.core.data import Audio, Signal, get_data
+from mirpy.core.framing import frame
+from mirpy.core.options import FrameSpec
 
 try:
     from mirpy._version import __version__
 except ImportError:  # running from a source tree without a build
     __version__ = "0.0.0"
 
-__all__ = ["__version__", "cite"]
+__all__ = ["Audio", "FrameSpec", "Signal", "__version__", "cite", "frame", "get_data"]
