@@ -46,8 +46,6 @@ If you use py-mir-toolbox, please cite it (see [`CITATION.cff`](CITATION.cff)) *
 | `docs/chapters/` | Course notebooks (Colab-ready) |
 | `reference/miningsuite/` | MiningSuite `+sig`, `+aud`, `+mus` (BSD-3), the translation source |
 
-To read the original MIRtoolbox 1.8.2 code locally, place it in `reference/MIRtoolbox1.8.2/` (git-ignored).
-
 ## License
 
 Code: BSD-3-Clause. Course text: CC-BY 4.0.
