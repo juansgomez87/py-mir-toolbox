@@ -23,6 +23,68 @@ import numpy as np
 
 N_AXES = 3
 CHANNEL_AXIS, ELEMENT_AXIS, FRAME_AXIS = 0, 1, 2
+PEAK_AXES = ("element", "frame")
+
+
+@dataclass(frozen=True, eq=False)
+class Peaks:
+    """Peaks found by :func:`mirpy.peaks`, one row per peak.
+
+    Rows are grouped by curve (channel, then frame) and, within a curve,
+    listed in the order requested from :func:`mirpy.peaks`.
+
+    Parameters
+    ----------
+    axis : {"element", "frame"}
+        Axis searched: along the elements of each frame (e.g. spectrum
+        bins), or along the frames of a one-element feature (e.g. framed
+        RMS). For ``"frame"``, `frame` equals `index`.
+    channel, frame, index : array_like of int
+        Channel, frame and 0-based position along `axis` of each peak.
+    pos : array_like of float
+        Peak position in units of the searched axis, refined by quadratic
+        interpolation when requested.
+    val : array_like of float
+        Peak height on the normalised curve, as returned by MiningSuite.
+        With the default ``normalize="global"`` it lies in [0, 1].
+    val_original : array_like of float
+        Peak height in the units of the signal (negated back for valleys).
+    rank : array_like of int
+        0 for the highest peak of its curve, 1 for the next, and so on.
+    """
+
+    axis: str
+    channel: np.ndarray
+    frame: np.ndarray
+    index: np.ndarray
+    pos: np.ndarray
+    val: np.ndarray
+    val_original: np.ndarray
+    rank: np.ndarray
+
+    def __post_init__(self):
+        if self.axis not in PEAK_AXES:
+            raise ValueError(f"axis must be one of {PEAK_AXES}, got {self.axis!r}")
+        for name in ("channel", "frame", "index", "rank"):
+            object.__setattr__(self, name, np.asarray(getattr(self, name), dtype=np.intp))
+        for name in ("pos", "val", "val_original"):
+            object.__setattr__(self, name, np.asarray(getattr(self, name), dtype=np.float64))
+        if len({len(getattr(self, name)) for name in self._columns()}) > 1:
+            raise ValueError("All peak columns must have the same length")
+
+    @staticmethod
+    def _columns() -> tuple[str, ...]:
+        return ("channel", "frame", "index", "pos", "val", "val_original", "rank")
+
+    def __len__(self) -> int:
+        return len(self.index)
+
+    def at(self, channel: int = 0, frame: int | None = None) -> "Peaks":
+        """Return the peaks of one channel, and of one frame if given."""
+        keep = self.channel == channel
+        if frame is not None:
+            keep &= self.frame == frame
+        return Peaks(self.axis, *(getattr(self, name)[keep] for name in self._columns()))
 
 
 @dataclass(frozen=True, eq=False)
@@ -61,6 +123,8 @@ class Signal:
         Path of the audio file the signal comes from.
     params : mapping
         Options used to compute the signal, kept for export metadata.
+    peaks : Peaks, optional
+        Peaks found by :func:`mirpy.peaks`.
     """
 
     data: np.ndarray
@@ -77,6 +141,7 @@ class Signal:
     channel_labels: tuple[str, ...] | None = None
     source: str | None = None
     params: Mapping = field(default_factory=dict)
+    peaks: Peaks | None = None
 
     def __post_init__(self):
         data = np.asarray(self.data, dtype=np.float64)

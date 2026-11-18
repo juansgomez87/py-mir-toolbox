@@ -10,10 +10,11 @@ Use :func:`mirpy.cite` to print the references to cite.
 
 from mirpy._cite import cite
 from mirpy.core.audio_ops import audio
-from mirpy.core.data import Audio, Signal, get_data
+from mirpy.core.data import Audio, Peaks, Signal, get_data
 from mirpy.core.export import file_table, frame_table, to_arff, to_csv, to_dataframe
 from mirpy.core.framing import frame
 from mirpy.core.options import FrameSpec
+from mirpy.core.peaks import peaks
 
 try:
     from mirpy._version import __version__
@@ -23,6 +24,7 @@ except ImportError:  # running from a source tree without a build
 __all__ = [
     "Audio",
     "FrameSpec",
+    "Peaks",
     "Signal",
     "__version__",
     "audio",
@@ -31,6 +33,7 @@ __all__ = [
     "frame",
     "frame_table",
     "get_data",
+    "peaks",
     "to_arff",
     "to_csv",
     "to_dataframe",

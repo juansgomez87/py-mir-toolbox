@@ -30,6 +30,8 @@ def plot(x: Signal, ax=None):
     axes = _make_axes(x.n_channels, ax)
     for channel, channel_ax in enumerate(axes):
         _plot_channel(x, channel, channel_ax)
+        if x.peaks is not None:
+            _plot_peaks(x, channel, channel_ax)
         if x.channel_labels is not None:
             channel_ax.set_title(x.channel_labels[channel], loc="right", fontsize="small")
     axes[0].set_title(x.name)
@@ -79,6 +81,17 @@ def _plot_channel(x: Signal, channel: int, ax) -> None:
         elements = np.arange(x.n_elements) if x.x_values is None else x.x_values
         ax.pcolormesh(x.frame_centers, elements, values, shading="nearest")
         ax.set_ylabel(_x_label(x))
+
+
+def _plot_peaks(x: Signal, channel: int, ax) -> None:
+    """Mark peaks at their (interpolated) position, in the signal's units."""
+    found = x.peaks.at(channel)
+    if found.axis == "frame":
+        ax.plot(found.pos + x.frame_length / 2, found.val_original, "o", color="C3")
+    elif x.is_framed and x.n_elements > 1:
+        ax.plot(x.frame_centers[found.frame], found.pos, ".", color="C3")
+    else:
+        ax.plot(found.pos, found.val_original, "o", color="C3")
 
 
 def _y_label(x: Signal) -> str:
