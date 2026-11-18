@@ -8,6 +8,8 @@ from mirpy.core.data import ELEMENT_AXIS, Signal
 from mirpy.core.options import FrameArg
 from mirpy.signal.spectrum import Spectrum, spectrum
 
+LOG_FLOOR = 1e-12  # added inside the log, as MiningSuite entropy.m
+
 
 def as_distribution(x: Signal, frame: FrameArg) -> Signal:
     """Return the curve a spectral statistic is computed on.
@@ -22,11 +24,17 @@ def as_distribution(x: Signal, frame: FrameArg) -> Signal:
     return spectrum(x, frame=frame)
 
 
-def feature_signal(x: Signal, values: np.ndarray, name: str, unit: str = "") -> Signal:
+def feature_signal(
+    x: Signal,
+    values: np.ndarray,
+    name: str,
+    unit: str = "",
+    frame_starts: np.ndarray | None = None,
+) -> Signal:
     """Wrap per-frame values of shape ``(n_channels, n_frames)`` in a :class:`Signal`.
 
     Keeps the sampling and framing of `x`, so the values sit at its frame
-    centres.
+    centres, unless other `frame_starts` are given.
     """
     return Signal(
         data=values[:, np.newaxis, :],
@@ -36,7 +44,7 @@ def feature_signal(x: Signal, values: np.ndarray, name: str, unit: str = "") -> 
         start=x.start,
         frame_rate=x.frame_rate,
         frame_length=x.frame_length,
-        frame_starts=x.frame_starts,
+        frame_starts=x.frame_starts if frame_starts is None else frame_starts,
         channel_labels=x.channel_labels,
         source=x.source,
         params=x.params,
@@ -67,3 +75,15 @@ def distribution(d: np.ndarray) -> np.ndarray:
 def with_params(x: Signal, operator: str, options: dict) -> Signal:
     """Record the options an operator used, for export metadata."""
     return replace(x, params={**x.params, operator: options})
+
+
+def relative_entropy(d: np.ndarray, center: bool) -> np.ndarray:
+    """Shannon entropy of each curve divided by ``log(n_elements)`` (``+sig/entropy.m``).
+
+    Negative values (after optional centring) are set to 0 and each curve
+    is scaled to sum to 1.
+    """
+    if center:
+        d = d - d.mean(axis=ELEMENT_AXIS, keepdims=True)
+    p = distribution(np.maximum(d, 0))
+    return -np.sum(p * np.log(p + LOG_FLOOR), axis=ELEMENT_AXIS) / np.log(d.shape[ELEMENT_AXIS])

@@ -21,6 +21,7 @@ from mirpy.features._common import (
     distribution,
     feature_signal,
     quiet_frames,
+    relative_entropy,
     with_params,
 )
 from mirpy.signal.spectrum import Spectrum
@@ -33,7 +34,6 @@ SPREAD_MIN_RMS = 0.01
 FLATNESS_MIN_RMS = 0.01
 ENTROPY_MIN_RMS = 0.005
 EXCESS = 3.0
-LOG_FLOOR = 1e-12  # added inside the log, as MiningSuite entropy.m
 
 
 def centroid(
@@ -84,7 +84,7 @@ def centroid(
     values = _centroid(d.data, d.x_values)
     gated = quiet_frames(d, min_rms)
     if max_entropy is not None and max_entropy < 1:
-        gated |= _entropy(d.data, center=False) > max_entropy
+        gated |= relative_entropy(d.data, center=False) > max_entropy
     values[gated] = np.nan
     result = feature_signal(d, values, _name(d, "centroid"), d.x_unit)
     return with_params(result, "centroid", {"min_rms": min_rms, "max_entropy": max_entropy})
@@ -238,7 +238,7 @@ def entropy(
         One value per channel and frame. NaN for quasi-silent frames.
     """
     d = as_distribution(x, frame)
-    values = _entropy(d.data, center)
+    values = relative_entropy(d.data, center)
     values[quiet_frames(d, min_rms)] = np.nan
     result = feature_signal(d, values, _name(d, "entropy"))
     return with_params(result, "entropy", {"center": center, "min_rms": min_rms})
@@ -271,10 +271,3 @@ def _central_moment(d: np.ndarray, f: np.ndarray, order: int) -> np.ndarray:
 def _standard_moment(d: np.ndarray, f: np.ndarray, order: int) -> np.ndarray:
     with np.errstate(invalid="ignore", divide="ignore"):
         return _central_moment(d, f, order) / _spread(d, f) ** order
-
-
-def _entropy(d: np.ndarray, center: bool) -> np.ndarray:
-    if center:
-        d = d - d.mean(axis=ELEMENT_AXIS, keepdims=True)
-    p = distribution(np.maximum(d, 0))
-    return -np.sum(p * np.log(p + LOG_FLOOR), axis=ELEMENT_AXIS) / np.log(d.shape[ELEMENT_AXIS])
