@@ -1,5 +1,5 @@
 # Phase 1 reference calls: feature name <TAB> MIRtoolbox 1.8.2 call on the audio file f.
-# Read by validation/phase1_fixtures.m (MATLAB) and tests/parity/test_phase1.py (mirpy side).
+# Read by validation/mirtoolbox_fixtures.m (MATLAB) and tests/parity/test_phase1.py (mirpy side).
 audio	miraudio(f)
 audio_mono0	miraudio(f,'Mono',0)
 audio_center	miraudio(f,'Center')

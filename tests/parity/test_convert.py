@@ -4,20 +4,24 @@ from pathlib import Path
 import numpy as np
 from scipy.io import savemat
 
-from parity.harness import PHASE1_CASES, load_fixture, matlab_peaks, read_cases
+from parity.harness import PHASE1_CASES, PHASE2_CASES, load_fixture, matlab_peaks, read_cases
 
-CONVERTER = Path(__file__).parents[2] / "validation" / "convert_matlab_fixtures.py"
+VALIDATION = Path(__file__).parents[2] / "validation"
 
 
-def load_converter():
-    spec = importlib.util.spec_from_file_location("convert_matlab_fixtures", CONVERTER)
+def load_script(name: str):
+    spec = importlib.util.spec_from_file_location(name, VALIDATION / f"{name}.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
 
+def load_converter():
+    return load_script("convert_matlab_fixtures")
+
+
 def write_matlab_like_fixture(path):
-    """Mimic what phase1_fixtures.m saves for a framed spectrum with peaks."""
+    """Mimic what mirtoolbox_fixtures.m saves for a framed spectrum with peaks."""
     savemat(
         path,
         {
@@ -75,3 +79,20 @@ def test_case_list_parses():
     assert cases["spectrum_frame"] == "mirspectrum(f,'Frame')"
     assert len(cases) == len(set(cases))
     assert all(call.count("(") == call.count(")") for call in cases.values())
+
+
+def test_stat_fields_are_converted(tmp_path):
+    mat = tmp_path / "ragtime__stat_rms.mat"
+    savemat(mat, {"stat_Mean": 0.5, "stat_Slope": -0.1, "call": "mirstat(mirrms(f,'Frame'))"})
+    fixture = load_fixture(load_converter().convert_file(mat, tmp_path))
+    assert fixture.arrays["stat_Mean"].item() == 0.5
+    assert fixture.arrays["stat_Slope"].item() == -0.1
+
+
+def test_case_lists_do_not_share_names():
+    """The MATLAB script runs all case lists into one folder."""
+    phase1, phase2 = read_cases(PHASE1_CASES), read_cases(PHASE2_CASES)
+    assert not set(phase1) & set(phase2)
+    pymirtoolbox = set(load_script("generate_fixtures").FEATURE_CALLS)
+    assert not (set(phase1) | set(phase2)) & pymirtoolbox
+    assert all(call.count("(") == call.count(")") for call in phase2.values())

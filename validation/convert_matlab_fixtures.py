@@ -1,4 +1,4 @@
-"""Convert MATLAB fixtures from ``phase1_fixtures.m`` to the parity-test format.
+"""Convert MATLAB fixtures from ``mirtoolbox_fixtures.m`` to the parity-test format.
 
 Each ``<stem>__<feature>.mat`` file becomes ``<stem>__<feature>.npz``, the
 format the parity tests read (see ``tests/parity/harness.py``). Arrays stay
@@ -28,16 +28,26 @@ ARRAY_FIELDS = (
     "peak_val",
     "peak_precise_val",
 )
-TEXT_FIELDS = ("feature", "call", "audio", "matlab_version", "mirtoolbox_version", "generated")
+STAT_PREFIX = "stat_"  # mirstat fields, e.g. stat_Mean
+TEXT_FIELDS = (
+    "feature",
+    "call",
+    "audio",
+    "matlab_version",
+    "mirtoolbox_version",
+    "mirtoolbox_path",
+    "generated",
+)
 FIXTURE_SEPARATOR = "__"
 
 
 def read_mat_fixture(path: Path) -> tuple[dict[str, np.ndarray], dict]:
     """Return the arrays and the metadata stored in one MATLAB fixture."""
     raw = loadmat(path, squeeze_me=False, chars_as_strings=True)
+    names = [*ARRAY_FIELDS, *(key for key in raw if key.startswith(STAT_PREFIX))]
     arrays = {
         name: np.asarray(raw[name], dtype=np.float64)
-        for name in ARRAY_FIELDS
+        for name in names
         if name in raw and np.size(raw[name])
     }
     metadata = {name: _text(raw[name]) for name in TEXT_FIELDS if name in raw}

@@ -1,27 +1,34 @@
-function phase1_fixtures(audio_dir, out_dir, cases_file, files)
-%PHASE1_FIXTURES Save MIRtoolbox 1.8.2 reference outputs for the py-mir-toolbox parity tests.
-%   PHASE1_FIXTURES(AUDIO_DIR, OUT_DIR) runs every call listed in
-%   phase1_cases.tsv (next to this file) on four demo files from
+function mirtoolbox_fixtures(audio_dir, out_dir, cases_files, files)
+%MIRTOOLBOX_FIXTURES Save MIRtoolbox 1.8.2 reference outputs for the py-mir-toolbox parity tests.
+%   MIRTOOLBOX_FIXTURES(AUDIO_DIR, OUT_DIR) runs every call listed in the
+%   *_cases.tsv files next to this file on four demo files from
 %   AUDIO_DIR (the MIRToolboxDemos folder) and writes one
 %   <stem>__<feature>.mat file per call and file into OUT_DIR.
 %
-%   PHASE1_FIXTURES(AUDIO_DIR, OUT_DIR, CASES_FILE, FILES) uses another
-%   list of calls and/or a cell array of other file names.
+%   MIRTOOLBOX_FIXTURES(AUDIO_DIR, OUT_DIR, CASES_FILES, FILES) uses other
+%   lists of calls (a file name or a cell array of them) and/or a cell
+%   array of other audio file names.
 %
 %   Each .mat file holds the raw data (element x frame x channel), the
 %   element positions, frame positions, sampling rate, the peaks when
 %   there are any (1-based, one row per peak), the call, and the MATLAB
-%   and MIRtoolbox versions. Convert them for the Python tests with
-%   validation/convert_matlab_fixtures.py.
+%   and MIRtoolbox versions. For calls that return a structure (mirstat),
+%   each numeric field F is saved as stat_F instead. Convert them for the
+%   Python tests with validation/convert_matlab_fixtures.py.
 %
 %   Requires MIRtoolbox 1.8.2 on the MATLAB path. A call that fails is
 %   written to OUT_DIR/failures.txt and skipped.
 %
 %   Example:
-%       phase1_fixtures('MIRtoolbox1.8.2/MIRToolboxDemos', 'phase1_fixtures')
+%       mirtoolbox_fixtures('MIRtoolbox1.8.2/MIRToolboxDemos', 'mirtoolbox_mat')
 
-if nargin < 3 || isempty(cases_file)
-    cases_file = fullfile(fileparts(mfilename('fullpath')), 'phase1_cases.tsv');
+if nargin < 3 || isempty(cases_files)
+    here = fileparts(mfilename('fullpath'));
+    listing = dir(fullfile(here, '*_cases.tsv'));
+    cases_files = fullfile(here, {listing.name});
+end
+if ischar(cases_files)
+    cases_files = {cases_files};
 end
 if nargin < 4
     files = {'ragtime.wav', 'Cmaj.wav', 'pianoA4.wav', 'trumpet.wav'};
@@ -32,7 +39,10 @@ end
 mirverbose(0);
 mirwaitbar(0);
 
-cases = read_cases(cases_file);
+cases = cell(0, 2);
+for k = 1:numel(cases_files)
+    cases = [cases; read_cases(cases_files{k})]; %#ok<AGROW>
+end
 versions = toolbox_versions();
 log_id = fopen(fullfile(out_dir, 'failures.txt'), 'w');
 closer = onCleanup(@() fclose(log_id));
@@ -51,6 +61,7 @@ for i = 1:numel(files)
             s.audio = files{i};
             s.matlab_version = versions.matlab;
             s.mirtoolbox_version = versions.mirtoolbox;
+            s.mirtoolbox_path = versions.path;
             s.generated = datestr(now, 'yyyy-mm-ddTHH:MM:SS');
             save(fullfile(out_dir, [stem '__' feature '.mat']), '-struct', 's', '-v7');
             fprintf('%s: %s\n', files{i}, feature);
@@ -79,10 +90,12 @@ end
 
 
 function v = toolbox_versions()
+% MIRtoolbox 1.8.2's Contents.m still says 1.8.1, so the path is saved too.
 v.matlab = version;
 v.mirtoolbox = 'unknown';
+v.path = fileparts(which('miraudio'));
 info = ver;
-match = find(contains(lower({info.Name}), 'mirtoolbox'), 1);
+match = find(~cellfun(@isempty, strfind(lower({info.Name}), 'mirtoolbox')), 1);
 if ~isempty(match)
     v.mirtoolbox = info(match).Version;
 end
@@ -91,11 +104,28 @@ end
 
 function s = describe(x)
 % Numeric content of a MIRtoolbox object, for the first file and segment.
+if isstruct(x)
+    s = describe_stat(x);
+    return
+end
 s.data = unwrap(get(x, 'Data'));
 s.pos = unwrap(get(x, 'Pos'));
 s.framepos = unwrap(get(x, 'FramePos'));
 s.sampling = unwrap(get(x, 'Sampling'));
 s = add_peaks(s, x);
+end
+
+
+function s = describe_stat(x)
+% mirstat output: one stat_<Field> array per numeric field.
+s = struct();
+names = fieldnames(x);
+for k = 1:numel(names)
+    value = unwrap(x.(names{k}));
+    if isnumeric(value)
+        s.(['stat_' names{k}]) = value;
+    end
+end
 end
 
 

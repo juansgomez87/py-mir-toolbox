@@ -6,7 +6,7 @@ Two fixture sources:
   MIRtoolbox manual, "the output of mirspectrum, in mel-band and
   log-scale" (40 bands, 50 ms frames, half overlap).
 - every feature in ``validation/phase1_cases.tsv``, generated in MATLAB by
-  ``validation/phase1_fixtures.m``. The mirpy calls below must mirror the
+  ``validation/mirtoolbox_fixtures.m``. The mirpy calls below must mirror the
   MATLAB calls of that file; ``test_cases_match_the_matlab_case_list``
   checks that no case is missing on either side.
 """
