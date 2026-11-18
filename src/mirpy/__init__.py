@@ -9,6 +9,7 @@ Use :func:`mirpy.cite` to print the references to cite.
 """
 
 from mirpy._cite import cite
+from mirpy.core.audio_ops import audio
 from mirpy.core.data import Audio, Signal, get_data
 from mirpy.core.export import file_table, frame_table, to_arff, to_csv, to_dataframe
 from mirpy.core.framing import frame
@@ -24,6 +25,7 @@ __all__ = [
     "FrameSpec",
     "Signal",
     "__version__",
+    "audio",
     "cite",
     "file_table",
     "frame",
