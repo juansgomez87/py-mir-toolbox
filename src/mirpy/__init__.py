@@ -15,6 +15,8 @@ from mirpy.core.export import file_table, frame_table, to_arff, to_csv, to_dataf
 from mirpy.core.framing import frame
 from mirpy.core.options import FrameSpec
 from mirpy.core.peaks import peaks
+from mirpy.signal.autocor import Autocor, autocor
+from mirpy.signal.spectrum import Spectrum, spectrum
 
 try:
     from mirpy._version import __version__
@@ -23,17 +25,21 @@ except ImportError:  # running from a source tree without a build
 
 __all__ = [
     "Audio",
+    "Autocor",
     "FrameSpec",
     "Peaks",
     "Signal",
+    "Spectrum",
     "__version__",
     "audio",
+    "autocor",
     "cite",
     "file_table",
     "frame",
     "frame_table",
     "get_data",
     "peaks",
+    "spectrum",
     "to_arff",
     "to_csv",
     "to_dataframe",
