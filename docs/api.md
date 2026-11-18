@@ -22,6 +22,18 @@ Framing
    frame
    FrameSpec
 
+Export
+------
+
+.. autosummary::
+   :toctree: generated/
+
+   file_table
+   frame_table
+   to_dataframe
+   to_csv
+   to_arff
+
 Citing
 ------
 
