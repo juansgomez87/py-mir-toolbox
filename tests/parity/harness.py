@@ -16,6 +16,7 @@ import numpy as np
 FIXTURES_ENV = "MIRPY_FIXTURES"
 DEFAULT_FIXTURES_DIR = Path(__file__).parents[1] / "data"
 AUDIO_ENV = "MIRPY_AUDIO"
+PHASE1_CASES = Path(__file__).parents[2] / "validation" / "phase1_cases.tsv"
 DEMO_AUDIO_DIR = Path(__file__).parents[2] / "reference" / "MIRtoolbox1.8.2" / "MIRToolboxDemos"
 REPORT_ENV = "MIRPY_PARITY_REPORT"
 DEFAULT_REPORT_PATH = Path(__file__).parents[2] / "build" / "parity_results.json"
@@ -87,6 +88,32 @@ def load_fixture(path: Path) -> Fixture:
         arrays = {key: npz[key] for key in npz.files if key != "metadata"}
         metadata = json.loads(str(npz["metadata"])) if "metadata" in npz.files else {}
     return Fixture(arrays, metadata)
+
+
+def read_cases(path: Path = PHASE1_CASES) -> dict[str, str]:
+    """Return ``{feature: MIRtoolbox call}`` from a tab-separated case list."""
+    cases = {}
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            feature, call = (part.strip() for part in line.split("\t"))
+            cases[feature] = call
+    return cases
+
+
+def matlab_peaks(fixture: Fixture) -> dict[str, np.ndarray]:
+    """Peak table of a MATLAB fixture, with 0-based channel, frame and index.
+
+    Rows keep MIRtoolbox's order: by channel, then frame, then the order
+    of the peaks within each curve.
+    """
+    a = fixture.arrays
+    columns = ("peak_channel", "peak_frame", "peak_index", "peak_pos", "peak_precise_pos")
+    columns += ("peak_val", "peak_precise_val")
+    table = {name: a.get(name, np.empty(0)).ravel() for name in columns}
+    for name in ("peak_channel", "peak_frame", "peak_index"):
+        table[name] = table[name].astype(np.intp) - 1
+    return {name.removeprefix("peak_"): values for name, values in table.items()}
 
 
 def from_matlab_axes(values) -> np.ndarray:

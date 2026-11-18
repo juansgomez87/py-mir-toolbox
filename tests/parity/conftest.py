@@ -33,6 +33,22 @@ def mirtoolbox_fixture():
 
 
 @pytest.fixture
+def record_parity(parity_results):
+    """Compare and record for the parity report without asserting.
+
+    For open questions (e.g. which of two conventions MIRtoolbox uses):
+    both hypotheses are recorded and the report shows which one holds.
+    """
+
+    def record(actual, expected, stage, feature):
+        result = compare(actual, expected, stage, feature)
+        parity_results.append(result)
+        return result
+
+    return record
+
+
+@pytest.fixture
 def assert_parity(parity_results):
     """Compare, record the result for the parity report, and assert."""
 
