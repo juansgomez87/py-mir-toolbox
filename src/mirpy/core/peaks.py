@@ -167,7 +167,7 @@ def peaks(
 def _peak_axis(x: Signal) -> tuple[str, np.ndarray]:
     """Return the axis to search and the position of each point along it."""
     if x.is_framed and x.n_elements == 1:
-        return "frame", x.frame_starts
+        return "frame", x.frame_centers
     if x.x_values is not None:
         return "element", x.x_values
     if not x.is_framed:

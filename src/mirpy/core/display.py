@@ -87,7 +87,7 @@ def _plot_peaks(x: Signal, channel: int, ax) -> None:
     """Mark peaks at their (interpolated) position, in the signal's units."""
     found = x.peaks.at(channel)
     if found.axis == "frame":
-        ax.plot(found.pos + x.frame_length / 2, found.val_original, "o", color="C3")
+        ax.plot(found.pos, found.val_original, "o", color="C3")
     elif x.is_framed and x.n_elements > 1:
         ax.plot(x.frame_centers[found.frame], found.pos, ".", color="C3")
     else:

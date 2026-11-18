@@ -224,7 +224,7 @@ def test_framed_one_element_feature_searches_frames():
     assert found.axis == "frame"
     np.testing.assert_array_equal(found.index, [3, 1])
     np.testing.assert_array_equal(found.frame, found.index)
-    np.testing.assert_allclose(found.pos, [1.5, 0.5])
+    np.testing.assert_allclose(found.pos, [2.0, 1.0])  # frame centres, as MiningSuite deframe
 
 
 def test_framed_multi_element_signal_searches_each_frame():
