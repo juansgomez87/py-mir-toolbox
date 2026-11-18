@@ -2,8 +2,6 @@
 
 **A Python port of [MIRtoolbox](https://github.com/olivierlar/mirtoolbox) for music feature extraction, designed as a bridge from music psychology to the Python music information retrieval (MIR) ecosystem.**
 
-> Status: pre-alpha. The package structure is in place and the features are being ported. See [`plan.md`](plan.md).
-
 MIRtoolbox (Lartillot & Toiviainen, 2007) is the MATLAB toolbox most music cognition and music psychology students learn first. py-mir-toolbox:
 
 1. keeps the MIRtoolbox function names and default parameters, so existing analyses carry over;
