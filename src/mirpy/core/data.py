@@ -141,6 +141,12 @@ class Signal:
             return None
         return self.frame_starts + self.frame_length / 2
 
+    def plot(self, ax=None):
+        """Plot the signal; see :func:`mirpy.core.display.plot`."""
+        from mirpy.core.display import plot
+
+        return plot(self, ax)
+
 
 @dataclass(frozen=True, eq=False)
 class Audio(Signal):
@@ -207,6 +213,12 @@ class Audio(Signal):
 
         y, sr = soundfile.read(path, dtype="float64", always_2d=True)
         return cls.from_array(y.T, sr, mono=mono, source=str(path))
+
+    def play(self):
+        """Return an audio player for notebooks; see :func:`mirpy.core.display.play`."""
+        from mirpy.core.display import play
+
+        return play(self)
 
 
 def _mix_channels(y: np.ndarray) -> np.ndarray:
