@@ -16,6 +16,7 @@ from mirpy.core.framing import frame
 from mirpy.core.options import FrameSpec
 from mirpy.core.peaks import peaks
 from mirpy.features.dynamics import lowenergy, rms
+from mirpy.features.flux import flux
 from mirpy.features.mfcc import Mfcc, mfcc
 from mirpy.features.moments import centroid, entropy, flatness, kurtosis, skewness, spread
 from mirpy.features.spectral import brightness, rolloff
@@ -25,6 +26,8 @@ from mirpy.signal.cepstrum import Cepstrum, cepstrum
 from mirpy.signal.filterbank import filterbank
 from mirpy.signal.spectrum import Spectrum, spectrum
 from mirpy.signal.summation import sum
+from mirpy.stats.histo import Histogram, histo
+from mirpy.stats.summary import mean, median, stat, std
 
 try:
     from mirpy._version import __version__
@@ -36,6 +39,7 @@ __all__ = [
     "Autocor",
     "Cepstrum",
     "FrameSpec",
+    "Histogram",
     "Mfcc",
     "Peaks",
     "Signal",
@@ -51,11 +55,15 @@ __all__ = [
     "file_table",
     "filterbank",
     "flatness",
+    "flux",
     "frame",
     "frame_table",
     "get_data",
+    "histo",
     "kurtosis",
     "lowenergy",
+    "mean",
+    "median",
     "mfcc",
     "peaks",
     "rms",
@@ -63,6 +71,8 @@ __all__ = [
     "skewness",
     "spectrum",
     "spread",
+    "stat",
+    "std",
     "sum",
     "to_arff",
     "to_csv",

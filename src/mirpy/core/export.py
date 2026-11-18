@@ -7,8 +7,9 @@ converts a table to pandas (optional ``export`` extra).
 Column names follow ``mirexport``: spaces are removed from the feature
 name, and multi-element features get a 1-based element index, e.g.
 ``Mel-Spectrum_1``. Multichannel features get a 1-based channel index,
-e.g. ``RMS_ch2``. Summary statistics columns (``_Mean``, ``_Std``) arrive
-with ``mirstat`` in a later release.
+e.g. ``RMS_ch2``. Summary statistics from :func:`mirpy.stat` (or
+:func:`mirpy.mean`, ...) are named ``<feature>_<field>``, which gives
+columns such as ``Spectralcentroid_Mean`` or ``MFCC_Std_3``.
 """
 
 import csv
