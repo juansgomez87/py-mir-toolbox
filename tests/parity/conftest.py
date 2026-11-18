@@ -3,6 +3,7 @@ import pytest
 from parity.harness import (
     compare,
     failure_message,
+    find_audio,
     fixtures_dir,
     load_fixture,
     report_path,
@@ -41,3 +42,17 @@ def assert_parity(parity_results):
         assert result.passed, failure_message(result)
 
     return check
+
+
+@pytest.fixture
+def fixture_audio():
+    """Return the path of a fixture's audio file; skip the test when it is not available."""
+
+    def locate(fixture):
+        name = fixture.metadata.get("audio")
+        path = find_audio(name) if name else None
+        if path is None:
+            pytest.skip(f"Audio for the fixture not found: {name}")
+        return path
+
+    return locate

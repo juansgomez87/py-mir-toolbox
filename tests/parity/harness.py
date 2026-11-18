@@ -15,6 +15,8 @@ import numpy as np
 
 FIXTURES_ENV = "MIRPY_FIXTURES"
 DEFAULT_FIXTURES_DIR = Path(__file__).parents[1] / "data"
+AUDIO_ENV = "MIRPY_AUDIO"
+DEMO_AUDIO_DIR = Path(__file__).parents[2] / "reference" / "MIRtoolbox1.8.2" / "MIRToolboxDemos"
 REPORT_ENV = "MIRPY_PARITY_REPORT"
 DEFAULT_REPORT_PATH = Path(__file__).parents[2] / "build" / "parity_results.json"
 MATLAB_AXES = 3  # MIRtoolbox data are (element, frame, channel)
@@ -66,6 +68,18 @@ def fixtures_dir() -> Path:
 
 def report_path() -> Path:
     return Path(os.environ.get(REPORT_ENV, DEFAULT_REPORT_PATH))
+
+
+def fixture_stems(feature: str) -> list[str]:
+    """Return the audio stems that have a ``<stem>__<feature>.npz`` fixture."""
+    return sorted(path.name.split("__")[0] for path in fixtures_dir().glob(f"*__{feature}.npz"))
+
+
+def find_audio(name: str) -> Path | None:
+    """Locate a fixture's audio file: ``$MIRPY_AUDIO``, ``<fixtures>/audio``, or the demos."""
+    folders = [Path(os.environ[AUDIO_ENV])] if AUDIO_ENV in os.environ else []
+    folders += [fixtures_dir() / "audio", DEMO_AUDIO_DIR]
+    return next((folder / name for folder in folders if (folder / name).exists()), None)
 
 
 def load_fixture(path: Path) -> Fixture:
