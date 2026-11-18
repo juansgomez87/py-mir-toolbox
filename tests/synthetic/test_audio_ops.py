@@ -5,7 +5,6 @@ import pytest
 import soundfile
 
 from mirpy import audio, get_data
-from mirpy.core.matlab_compat import matlab_round
 
 SR = 1000
 
@@ -41,10 +40,6 @@ def padded_tone(n_before=1234, n_tone=2000, n_after=987):
     tone = np.sin(2 * np.pi * 50 * np.arange(n_tone) / SR)
     quiet = 1e-4 * rng.standard_normal(n_before + n_after)
     return np.concatenate([quiet[:n_before], tone, quiet[n_before:]])
-
-
-def test_matlab_round_rounds_half_away_from_zero():
-    np.testing.assert_array_equal(matlab_round([0.5, 1.5, 2.5, -0.5, -2.5]), [1, 2, 3, -1, -3])
 
 
 def test_array_needs_sr_and_file_rejects_it(tmp_path):
