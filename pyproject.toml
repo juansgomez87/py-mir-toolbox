@@ -78,6 +78,7 @@ addopts = "-ra"
 [tool.ruff]
 line-length = 99
 target-version = "py312"
+extend-exclude = ["src/mirpy/_vendor"]  # third-party code kept verbatim
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "D"]

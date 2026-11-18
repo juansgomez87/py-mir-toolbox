@@ -22,6 +22,15 @@ MIRtoolbox source code is NOT included in or translated into this package.
 MIRtoolbox 1.8.2 is used only as a numerical reference: outputs are compared
 against it in the validation suite. The MIRtoolbox manual is used as documentation.
 
+python_auditory_toolbox
+-----------------------
+Copyright Malcolm Slaney. Licensed under the Apache License, Version 2.0
+(see src/mirpy/_vendor/LICENSE-APACHE-2.0.txt).
+Upstream: https://github.com/MalcolmSlaney/python_auditory_toolbox (version 1.0.6)
+Vendored in src/mirpy/_vendor/auditory_toolbox.py: ErbSpace, MakeErbFilters and
+ErbFilterBank (gammatone filterbank, Slaney 1993, Apple TR #35), unchanged; other
+functions removed.
+
 Data files
 ----------
 Key profiles (gomezprofs.mat) and the key self-organizing map

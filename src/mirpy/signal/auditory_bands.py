@@ -19,18 +19,28 @@ BARK_UPPER_FREQS = 10.0 * np.array(
 )  # fmt: skip
 
 
-def mel_weights(freqs: np.ndarray, n_bands: int = DEFAULT_MEL_BANDS) -> np.ndarray:
-    """Return triangular Mel filters, shape ``(n_bands, len(freqs))``.
+def mel_edges(n_bands: int = DEFAULT_MEL_BANDS) -> np.ndarray:
+    """Return the ``n_bands + 2`` edge frequencies of the Mel bands.
 
-    The first 13 bands are spaced linearly from 133.33 Hz by 66.67 Hz,
-    the others logarithmically (ratio 1.0711703). Each triangle has unit
-    area (height ``2 / (upper - lower)``).
+    Band ``i`` spans ``edges[i]`` to ``edges[i + 2]`` and peaks at
+    ``edges[i + 1]``. The first 13 edges are spaced linearly from
+    133.33 Hz by 66.67 Hz, the others logarithmically (ratio 1.0711703).
     """
     n_linear = min(MEL_MAX_LINEAR_BANDS, n_bands)
     edges = np.empty(n_bands + 2)
     edges[:n_linear] = MEL_LOWEST_FREQ + np.arange(n_linear) * MEL_LINEAR_SPACING
     n_log = n_bands + 2 - n_linear
     edges[n_linear:] = edges[n_linear - 1] * MEL_LOG_SPACING ** np.arange(1, n_log + 1)
+    return edges
+
+
+def mel_weights(freqs: np.ndarray, n_bands: int = DEFAULT_MEL_BANDS) -> np.ndarray:
+    """Return triangular Mel filters, shape ``(n_bands, len(freqs))``.
+
+    Each triangle has unit area (height ``2 / (upper - lower)``); see
+    :func:`mel_edges` for the band edges.
+    """
+    edges = mel_edges(n_bands)
     lower, center, upper = edges[:-2, None], edges[1:-1, None], edges[2:, None]
     rising = ((freqs > lower) & (freqs <= center)) * (freqs - lower) / (center - lower)
     falling = ((freqs > center) & (freqs < upper)) * (upper - freqs) / (upper - center)
