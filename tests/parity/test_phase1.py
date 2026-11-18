@@ -16,9 +16,10 @@ import pytest
 
 import mirpy as mir
 from mirpy import FrameSpec
+from parity.cases import cases_with_fixtures, check_signal, load_matlab_case
 from parity.harness import Stage, fixture_stems, from_matlab_axes, matlab_peaks, read_cases
 
-NO_FIXTURE = pytest.param("", "", marks=pytest.mark.skip(reason="no MIRtoolbox fixture available"))
+CALLS = read_cases()
 SCHEIRER_CUTOFFS = [-np.inf, 200, 400, 800, 1600, 3200, np.inf]
 
 
@@ -119,43 +120,22 @@ PEAK_CASES = {
 }
 
 
-def cases_with_fixtures(features) -> list:
-    params = [(feature, stem) for feature in features for stem in fixture_stems(feature)]
-    return params or [NO_FIXTURE]
-
-
 def test_cases_match_the_matlab_case_list():
-    assert set(CASES) | set(PEAK_CASES) == set(read_cases())
-
-
-def load_matlab_case(feature, stem, mirtoolbox_fixture, fixture_audio):
-    ref = mirtoolbox_fixture(stem, feature)
-    assert ref.metadata.get("call") == read_cases()[feature], "fixture made by another call"
-    return ref, fixture_audio(ref)
+    assert set(CASES) | set(PEAK_CASES) == set(CALLS)
 
 
 @pytest.mark.parametrize(("feature", "stem"), cases_with_fixtures(CASES))
 def test_matlab_case(feature, stem, mirtoolbox_fixture, fixture_audio, assert_parity):
-    ref, path = load_matlab_case(feature, stem, mirtoolbox_fixture, fixture_audio)
+    ref, path = load_matlab_case(feature, stem, CALLS, mirtoolbox_fixture, fixture_audio)
     build, stage = CASES[feature]
-    result = build(path)
-    label = f"{stem}: {feature}"
-    assert_parity(result.data, from_matlab_axes(ref.arrays["data"]), stage, label)
-    if result.is_framed and "framepos" in ref.arrays:
-        starts, ends = ref.arrays["framepos"]
-        assert_parity(result.frame_starts, starts, Stage.LINEAR, f"{label} frame starts")
-        assert_parity(result.frame_ends, ends, Stage.LINEAR, f"{label} frame ends")
-    if result.x_values is not None and "pos" in ref.arrays:
-        pos = ref.arrays["pos"]
-        positions = pos.reshape(len(pos), -1)[:, 0]  # first frame's column
-        assert_parity(result.x_values, positions, Stage.LINEAR, f"{label} positions")
+    check_signal(build(path), ref, stage, f"{stem}: {feature}", assert_parity)
 
 
 @pytest.mark.parametrize(("feature", "stem"), cases_with_fixtures(PEAK_CASES))
 def test_matlab_peaks(
     feature, stem, mirtoolbox_fixture, fixture_audio, assert_parity, record_parity
 ):
-    ref, path = load_matlab_case(feature, stem, mirtoolbox_fixture, fixture_audio)
+    ref, path = load_matlab_case(feature, stem, CALLS, mirtoolbox_fixture, fixture_audio)
     found = PEAK_CASES[feature](path).peaks
     expected = matlab_peaks(ref)
     label = f"{stem}: {feature}"

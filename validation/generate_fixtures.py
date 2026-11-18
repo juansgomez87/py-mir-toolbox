@@ -27,6 +27,9 @@ AUDIO_SUFFIXES = {".wav", ".flac", ".aiff", ".au"}
 FEATURE_CALLS = {
     "brightness_frame": ("mirbrightness", {"Frame": True}),
     "mfcc_frame": ("mirmfcc", {"Frame": True}),
+    # "_runtime" keeps these apart from the MATLAB cases of phase2_cases.tsv
+    "rolloff_frame_runtime": ("mirrolloff", {"Frame": True}),
+    "zerocross_frame_runtime": ("mirzerocross", {"Frame": True}),
     "chromagram_frame": ("mirchromagram", {"Frame": True}),
     "tempo": ("mirtempo", {}),
 }
