@@ -16,7 +16,10 @@ from mirpy.core.framing import frame
 from mirpy.core.options import FrameSpec
 from mirpy.core.peaks import peaks
 from mirpy.signal.autocor import Autocor, autocor
+from mirpy.signal.cepstrum import Cepstrum, cepstrum
+from mirpy.signal.filterbank import filterbank
 from mirpy.signal.spectrum import Spectrum, spectrum
+from mirpy.signal.summation import sum
 
 try:
     from mirpy._version import __version__
@@ -26,6 +29,7 @@ except ImportError:  # running from a source tree without a build
 __all__ = [
     "Audio",
     "Autocor",
+    "Cepstrum",
     "FrameSpec",
     "Peaks",
     "Signal",
@@ -33,13 +37,16 @@ __all__ = [
     "__version__",
     "audio",
     "autocor",
+    "cepstrum",
     "cite",
     "file_table",
+    "filterbank",
     "frame",
     "frame_table",
     "get_data",
     "peaks",
     "spectrum",
+    "sum",
     "to_arff",
     "to_csv",
     "to_dataframe",
