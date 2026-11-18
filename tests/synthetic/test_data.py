@@ -25,11 +25,11 @@ def test_mismatched_x_values_rejected():
         Signal(data=np.zeros((1, 10, 1)), sr=SR, x_values=np.arange(5))
 
 
-def test_mono_sums_channels():
+def test_mono_averages_channels():
     stereo = np.vstack([np.full(100, 0.25), np.full(100, 0.5)])
     x = Audio.from_array(stereo, sr=SR)
     assert x.data.shape == (1, 100, 1)
-    np.testing.assert_allclose(get_data(x), 0.75)
+    np.testing.assert_allclose(get_data(x), 0.375)
 
 
 def test_mono_false_keeps_channels():

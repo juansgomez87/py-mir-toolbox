@@ -171,7 +171,7 @@ class Audio(Signal):
         sr : float
             Sampling rate in Hz.
         mono : bool
-            Sum the channels into one, as MIRtoolbox does by default.
+            Average the channels into one, as MIRtoolbox does by default.
         **kwargs
             Other :class:`Signal` fields, e.g. ``source``.
 
@@ -203,7 +203,7 @@ class Audio(Signal):
         path : str or path-like
             Any format libsndfile reads (WAV, FLAC, AIFF, OGG, MP3, ...).
         mono : bool
-            Sum the channels into one, as MIRtoolbox does by default.
+            Average the channels into one, as MIRtoolbox does by default.
 
         Returns
         -------
@@ -222,9 +222,9 @@ class Audio(Signal):
 
 
 def _mix_channels(y: np.ndarray) -> np.ndarray:
-    # MiningSuite 'Mix' sums the channels. Sum vs mean in MIRtoolbox 1.8.2
-    # is to be confirmed against the reference fixtures.
-    return y.sum(axis=0, keepdims=True)
+    # MiningSuite evaleach.m mixes with data.mean('channel'). To be confirmed
+    # against the MIRtoolbox 1.8.2 fixtures.
+    return y.mean(axis=0, keepdims=True)
 
 
 def get_data(x: Signal) -> np.ndarray:
