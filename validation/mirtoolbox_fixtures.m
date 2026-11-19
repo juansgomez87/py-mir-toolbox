@@ -166,10 +166,28 @@ end
 
 
 function v = unwrap(v)
-% Descend {file}{segment}... cells down to the first numeric array, or to
-% a cell array of labels.
+% Data of the first file and segment ({file}{segment} cells). Below that, a
+% cell array with one numeric value per frame (e.g. mircentroid) is joined
+% into one array; other cells fall back to their first numeric array.
+for level = 1:2
+    if ~iscell(v) || isempty(v) || iscellstr(v)
+        break
+    end
+    v = v{1};
+end
+if iscell(v) && ~isempty(v) && ~iscellstr(v) && all(cellfun(@isnumeric, v(:)))
+    try
+        v = cell2mat(v);
+    catch
+        v = v{1};
+    end
+end
 while iscell(v) && ~isempty(v) && ~iscellstr(v)
     v = v{1};
+end
+if iscell(v) && ~iscellstr(v)
+    v = [];
+end
 end
 if iscell(v) && ~iscellstr(v)
     v = [];

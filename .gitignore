@@ -25,6 +25,7 @@ docs/jupyter_execute/
 # Validation fixtures live in a separate repository
 validation/fixtures/
 validation/mirtoolbox_mat/
+validation/*_probe.mat
 
 .DS_Store
 src/mirpy/_version.py
