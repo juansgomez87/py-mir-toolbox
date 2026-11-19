@@ -22,6 +22,15 @@ Framing
    frame
    FrameSpec
 
+Batch processing
+----------------
+
+.. autosummary::
+   :toctree: generated/
+
+   batch
+   list_audio
+
 Export
 ------
 

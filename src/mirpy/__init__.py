@@ -10,6 +10,7 @@ Use :func:`mirpy.cite` to print the references to cite.
 
 from mirpy._cite import cite
 from mirpy.core.audio_ops import audio
+from mirpy.core.batch import batch, list_audio
 from mirpy.core.data import Audio, Peaks, Signal, get_data
 from mirpy.core.export import file_table, frame_table, to_arff, to_csv, to_dataframe
 from mirpy.core.framing import frame
@@ -47,6 +48,7 @@ __all__ = [
     "__version__",
     "audio",
     "autocor",
+    "batch",
     "brightness",
     "centroid",
     "cepstrum",
@@ -61,6 +63,7 @@ __all__ = [
     "get_data",
     "histo",
     "kurtosis",
+    "list_audio",
     "lowenergy",
     "mean",
     "median",

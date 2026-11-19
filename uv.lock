@@ -1873,6 +1873,7 @@ parallel = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "joblib" },
     { name = "myst-nb" },
     { name = "numpydoc" },
     { name = "pandas" },
@@ -1895,6 +1896,7 @@ docs = [
     { name = "sphinx-design" },
 ]
 test = [
+    { name = "joblib" },
     { name = "pandas" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -1914,6 +1916,7 @@ provides-extras = ["export", "librosa", "parallel"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "joblib", specifier = ">=1.3" },
     { name = "myst-nb", specifier = ">=1.1" },
     { name = "numpydoc", specifier = ">=1.8" },
     { name = "pandas", specifier = ">=2.2" },
@@ -1934,6 +1937,7 @@ docs = [
     { name = "sphinx-design", specifier = ">=0.6" },
 ]
 test = [
+    { name = "joblib", specifier = ">=1.3" },
     { name = "pandas", specifier = ">=2.2" },
     { name = "pytest", specifier = ">=8" },
     { name = "pytest-cov", specifier = ">=5" },
