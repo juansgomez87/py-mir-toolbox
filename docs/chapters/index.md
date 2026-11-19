@@ -13,4 +13,5 @@ The chapter ends by explaining where the numbers differ and why.
 :maxdepth: 1
 
 B_basics
+C3_dynamics
 ```
