@@ -189,10 +189,6 @@ if iscell(v) && ~iscellstr(v)
     v = [];
 end
 end
-if iscell(v) && ~iscellstr(v)
-    v = [];
-end
-end
 
 
 function s = add_peaks(s, x)
