@@ -1,7 +1,6 @@
 # Phase 7 (emotion) reference calls: feature <TAB> MIRtoolbox 1.8.2 call on f [<TAB> output number].
 # Read by validation/mirtoolbox_fixtures.m. Names must be unique across all *_cases.tsv files.
 emotion	miremotion(f)
-emotion_frame	miremotion(f,'Frame')
 emotion_dimensions	miremotion(f,'Dimensions',3,'Concepts',0)
 emotion_arousal	miremotion(f,'Arousal')
 emotion_valence	miremotion(f,'Valence')

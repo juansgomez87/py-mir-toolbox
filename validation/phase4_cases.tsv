@@ -20,4 +20,3 @@ pitch_tolonen	mirpitch(f,'Frame','Tolonen')
 pitch_autocor	mirpitch(f,'Frame')	2
 inharmonicity	mirinharmonicity(f)
 inharmonicity_frame	mirinharmonicity(f,'Frame')
-inharmonicity_f0	mirinharmonicity(f,'f0',440)
