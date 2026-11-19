@@ -109,12 +109,15 @@ def stat(x: Signal) -> dict[str, Signal]:
         - ``Mean``, ``Std``: see :func:`mean`, :func:`std`.
         - ``Slope``: least-squares slope of the curve, centred and scaled
           to unit variance, against time scaled to [-0.5, 0.5].
-        - ``PeriodFreq``: frequency (Hz) of the highest local maximum of
-          the curve's autocorrelation (not centred, no window, all
-          lags). NaN when there is none. The lag is converted with the
+        - ``PeriodFreq``: frequency (Hz) of the highest positive local
+          maximum of the curve's autocorrelation (not centred, no window,
+          all lags; the last lag counts as a maximum when the curve rises
+          to it). NaN when there is none. The lag is converted with the
           first frame step, as MIRtoolbox does (44100/1102 Hz, not 40 Hz,
           for 50 ms frames with half overlap at 44.1 kHz).
-        - ``PeriodAmp``: that peak's height, with lag 0 scaled to 1.
+        - ``PeriodAmp``: that peak's height, with lag 0 scaled to 1. NaN
+          when the autocorrelation never rises again, 0 when it does but
+          no maximum is above 0 (MIRtoolbox 1.8.2 fixtures).
         - ``PeriodEntropy``: relative entropy (see :func:`mirpy.entropy`)
           of the absolute value of that autocorrelation.
 
@@ -198,9 +201,13 @@ def _periodicity(curve: np.ndarray, frame_rate: float) -> tuple[float, float, fl
         return np.nan, np.nan, np.nan
     r = r / r[0]
     entropy = float(relative_entropy(np.abs(r).reshape(1, -1, 1), center=False).item())
-    peak = _main_peak(r)
-    if peak is None:
+    maxima = _local_maxima(r)
+    if maxima.size == 0:
         return np.nan, np.nan, entropy
+    positive = maxima[r[maxima] > 0]
+    if positive.size == 0:
+        return np.nan, 0.0, entropy
+    peak = int(positive[np.argmax(r[positive])])
     return frame_rate / peak, r[peak], entropy
 
 
@@ -212,13 +219,12 @@ def _frame_step_rate(x: Signal) -> float:
     return 1 / (starts[1] - starts[0])
 
 
-def _main_peak(r: np.ndarray) -> int | None:
-    """Index of the highest local maximum after the first descent from lag 0."""
+def _local_maxima(r: np.ndarray) -> np.ndarray:
+    """Lags of the local maxima after the first descent from lag 0, the last lag included."""
     rising = np.flatnonzero(np.diff(r) > 0)
     if rising.size == 0:
-        return None
-    candidates = np.arange(rising[0] + 1, r.size - 1)
-    maxima = candidates[(r[candidates] > r[candidates - 1]) & (r[candidates] >= r[candidates + 1])]
-    if maxima.size == 0:
-        return None
-    return int(maxima[np.argmax(r[maxima])])
+        return rising
+    lags = np.arange(rising[0] + 1, r.size)
+    above_left = r[lags] > r[lags - 1]
+    above_right = np.append(r[lags[:-1]] >= r[lags[:-1] + 1], True)
+    return lags[above_left & above_right]
