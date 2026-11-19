@@ -38,20 +38,21 @@ def test_moments_match_weighted_statistics():
     rng = np.random.default_rng(0)
     weights = rng.random(50)
     f = np.linspace(0, 1000, 50)
-    p = weights / weights.sum()
+    shifted = weights + weights.min()  # MIRtoolbox adds each curve's minimum
+    p = shifted / shifted.sum()
     mean = np.sum(f * p)
     sd = np.sqrt(np.sum((f - mean) ** 2 * p))
     x = curve(weights, f)
     assert centroid(x, max_entropy=None).data.item() == pytest.approx(mean)
     assert spread(x).data.item() == pytest.approx(sd)
     assert skewness(x).data.item() == pytest.approx(np.sum((f - mean) ** 3 * p) / sd**3)
-    assert kurtosis(x).data.item() == pytest.approx(np.sum((f - mean) ** 4 * p) / sd**4 - 3)
+    assert kurtosis(x).data.item() == pytest.approx(np.sum((f - mean) ** 4 * p) / sd**4)
 
 
-def test_kurtosis_is_excess_kurtosis():
+def test_kurtosis_is_not_excess_kurtosis():
     f = np.linspace(-5, 5, 2001)
     gaussian = curve(scipy.stats.norm.pdf(f), f)
-    assert kurtosis(gaussian).data.item() == pytest.approx(0, abs=1e-3)  # sampled, truncated
+    assert kurtosis(gaussian).data.item() == pytest.approx(3, abs=1e-3)  # sampled, truncated
     assert skewness(gaussian).data.item() == pytest.approx(0, abs=1e-9)
 
 

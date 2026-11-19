@@ -7,7 +7,10 @@ Olivier Lartillot). Changes made to follow the MIRtoolbox manual:
 
 - On a waveform, the statistics are computed on its spectrum
   (MiningSuite ``centroid`` defaults to the waveform itself).
-- ``kurtosis`` is the excess kurtosis (minus 3), which MiningSuite omits.
+- The moments are taken over the curve plus its own minimum (per channel
+  and frame). Not in MiningSuite or the manual; found with the ragtime
+  fixtures, where it matches MIRtoolbox to 1e-15 (it explains the "slight
+  overestimate" of the centroid reported by Kazazis et al. 2017).
 - The ``'MinRMS'`` and ``'MaxEntropy'`` gates, absent from MiningSuite,
   are written from the manual; see :func:`mirpy.features._common.quiet_frames`.
 """
@@ -33,7 +36,6 @@ CENTROID_MAX_ENTROPY = 0.95
 SPREAD_MIN_RMS = 0.01
 FLATNESS_MIN_RMS = 0.01
 ENTROPY_MIN_RMS = 0.005
-EXCESS = 3.0
 
 
 def centroid(
@@ -147,9 +149,10 @@ def skewness(x: Signal, *, frame: FrameArg = False) -> Signal:
 
 
 def kurtosis(x: Signal, *, frame: FrameArg = False) -> Signal:
-    """Compute the excess kurtosis (fourth standardised moment minus 3) of a distribution.
+    """Compute the kurtosis (fourth standardised moment) of a distribution.
 
-    Equivalent to MIRtoolbox ``mirkurtosis``.
+    Equivalent to MIRtoolbox ``mirkurtosis``. Not the excess kurtosis: a
+    Gaussian gives 3, as in MIRtoolbox (the manual says excess).
 
     Parameters
     ----------
@@ -166,7 +169,7 @@ def kurtosis(x: Signal, *, frame: FrameArg = False) -> Signal:
         One value per channel and frame.
     """
     d = as_distribution(x, frame)
-    values = _standard_moment(d.data, d.x_values, 4) - EXCESS
+    values = _standard_moment(d.data, d.x_values, 4)
     return with_params(feature_signal(d, values, _name(d, "kurtosis")), "kurtosis", {})
 
 
@@ -255,8 +258,13 @@ def _positions(f: np.ndarray) -> np.ndarray:
     return f[np.newaxis, :, np.newaxis]
 
 
+def _weights(d: np.ndarray) -> np.ndarray:
+    """Each curve plus its minimum, normalised to sum to 1 (MIRtoolbox behaviour)."""
+    return distribution(d + d.min(axis=ELEMENT_AXIS, keepdims=True))
+
+
 def _centroid(d: np.ndarray, f: np.ndarray) -> np.ndarray:
-    return np.sum(_positions(f) * distribution(d), axis=ELEMENT_AXIS)
+    return np.sum(_positions(f) * _weights(d), axis=ELEMENT_AXIS)
 
 
 def _spread(d: np.ndarray, f: np.ndarray) -> np.ndarray:
@@ -265,7 +273,7 @@ def _spread(d: np.ndarray, f: np.ndarray) -> np.ndarray:
 
 def _central_moment(d: np.ndarray, f: np.ndarray, order: int) -> np.ndarray:
     deviation = _positions(f) - _centroid(d, f)[:, np.newaxis, :]
-    return np.sum(deviation**order * distribution(d), axis=ELEMENT_AXIS)
+    return np.sum(deviation**order * _weights(d), axis=ELEMENT_AXIS)
 
 
 def _standard_moment(d: np.ndarray, f: np.ndarray, order: int) -> np.ndarray:
