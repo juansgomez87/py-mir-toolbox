@@ -123,6 +123,10 @@ if isstruct(x)
 end
 s.data = unwrap(get(x, 'Data'));
 s.pos = unwrap(get(x, 'Pos'));
+if iscellstr(s.pos)  % e.g. chroma names of a chromagram
+    s.pos_labels = strjoin(s.pos(:)', '|');
+    s.pos = [];
+end
 s.framepos = unwrap(get(x, 'FramePos'));
 s.sampling = unwrap(get(x, 'Sampling'));
 s = add_peaks(s, x);
@@ -162,11 +166,12 @@ end
 
 
 function v = unwrap(v)
-% Descend {file}{segment}... cells down to the first numeric array.
-while iscell(v) && ~isempty(v)
+% Descend {file}{segment}... cells down to the first numeric array, or to
+% a cell array of labels.
+while iscell(v) && ~isempty(v) && ~iscellstr(v)
     v = v{1};
 end
-if iscell(v)
+if iscell(v) && ~iscellstr(v)
     v = [];
 end
 end

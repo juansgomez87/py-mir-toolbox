@@ -16,10 +16,17 @@ import pytest
 
 import mirpy as mir
 from mirpy import FrameSpec
-from parity.cases import cases_with_fixtures, check_signal, load_matlab_case
+from parity.cases import (
+    BANDS_AS_CHANNELS,
+    STANDARD,
+    cases_with_fixtures,
+    check_signal,
+    load_matlab_case,
+)
 from parity.harness import Stage, fixture_stems, from_matlab_axes, matlab_peaks, read_cases
 
 CALLS = read_cases()
+BAND_SPECTRA = {"spectrum_mel", "spectrum_bark", "spectrum_bark_mask"}
 SCHEIRER_CUTOFFS = [-np.inf, 200, 400, 800, 1600, 3200, np.inf]
 
 
@@ -128,7 +135,8 @@ def test_cases_match_the_matlab_case_list():
 def test_matlab_case(feature, stem, mirtoolbox_fixture, fixture_audio, assert_parity):
     ref, path = load_matlab_case(feature, stem, CALLS, mirtoolbox_fixture, fixture_audio)
     build, stage = CASES[feature]
-    check_signal(build(path), ref, stage, f"{stem}: {feature}", assert_parity)
+    layout = BANDS_AS_CHANNELS if feature in BAND_SPECTRA else STANDARD
+    check_signal(build(path), ref, stage, f"{stem}: {feature}", assert_parity, layout)
 
 
 @pytest.mark.parametrize(("feature", "stem"), cases_with_fixtures(PEAK_CASES))

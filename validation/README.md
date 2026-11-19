@@ -24,7 +24,7 @@ cd validation
 mirtoolbox_fixtures('/path/to/MIRtoolbox1.8.2/MIRToolboxDemos', 'mirtoolbox_mat')
 ```
 
-This runs each call in the seven `phase*_cases.tsv` files (222 calls: 59, 43, 23, 21, 51, 18 and 7 for phases 1 to 7) on `ragtime.wav`, `Cmaj.wav`, `pianoA4.wav` and `trumpet.wav`, and writes one `<stem>__<feature>.mat` file per call (about 890 files). Phases 5 to 7 (tempo, pulse clarity, emotion, segmentation) are slow; the whole run may take an hour or more. Calls that fail are listed in `mirtoolbox_mat/failures.txt` and skipped. Please send back the whole folder, including `failures.txt`, and tell us which MIRtoolbox release you used: 1.8.2's `Contents.m` still says 1.8.1, so the recorded version cannot tell them apart (the toolbox path is saved too).
+This runs each call in the seven `phase*_cases.tsv` files (221 calls: 59, 43, 23, 21, 50, 18 and 7 for phases 1 to 7) on `ragtime.wav`, `Cmaj.wav`, `pianoA4.wav` and `trumpet.wav`, and writes one `<stem>__<feature>.mat` file per call (about 890 files). Phases 5 to 7 (tempo, pulse clarity, emotion, segmentation) are slow; the whole run may take an hour or more. Calls that fail are listed in `mirtoolbox_mat/failures.txt` and skipped. Please send back the whole folder, including `failures.txt`, and tell us which MIRtoolbox release you used: 1.8.2's `Contents.m` still says 1.8.1, so the recorded version cannot tell them apart (the toolbox path is saved too).
 
 The script does not run on Octave: MIRtoolbox itself fails to parse there.
 

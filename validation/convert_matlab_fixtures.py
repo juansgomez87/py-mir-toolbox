@@ -9,6 +9,7 @@ in MIRtoolbox's order and 1-based indexing; the tests convert them.
 
 import argparse
 import json
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -39,6 +40,7 @@ TEXT_FIELDS = (
     "mirtoolbox_version",
     "mirtoolbox_path",
     "generated",
+    "pos_labels",
 )
 FIXTURE_SEPARATOR = "__"
 
@@ -47,11 +49,14 @@ def read_mat_fixture(path: Path) -> tuple[dict[str, np.ndarray], dict]:
     """Return the arrays and the metadata stored in one MATLAB fixture."""
     raw = loadmat(path, squeeze_me=False, chars_as_strings=True)
     names = [*ARRAY_FIELDS, *(key for key in raw if key.startswith(STAT_PREFIX))]
-    arrays = {
-        name: np.asarray(raw[name], dtype=np.float64)
-        for name in names
-        if name in raw and np.size(raw[name])
-    }
+    arrays = {}
+    for name in names:
+        if name not in raw or not np.size(raw[name]):
+            continue
+        if not np.issubdtype(np.asarray(raw[name]).dtype, np.number):
+            warnings.warn(f"{path.name}: {name} is not numeric; skipped", stacklevel=2)
+            continue
+        arrays[name] = np.asarray(raw[name], dtype=np.float64)
     metadata = {name: _text(raw[name]) for name in TEXT_FIELDS if name in raw}
     metadata["source"] = "matlab"
     return arrays, metadata

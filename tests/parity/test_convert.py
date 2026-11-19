@@ -2,6 +2,7 @@ import importlib.util
 from pathlib import Path
 
 import numpy as np
+import pytest
 from scipy.io import savemat
 
 from parity.harness import (
@@ -119,3 +120,11 @@ def test_case_output_column():
     assert outputs["key"] == 1 and outputs["key_clarity"] == 2
     assert read_cases(PHASE3_CASES)["key_clarity"] == "mirkey(f)"
     assert all(n >= 1 for path in ALL_CASES for n in read_case_outputs(path).values())
+
+
+def test_non_numeric_fields_are_skipped_with_a_warning(tmp_path):
+    mat = tmp_path / "ragtime__chromagram.mat"
+    savemat(mat, {"data": np.ones((12, 1)), "pos": "C", "pos_labels": "C|C#", "call": "x"})
+    with pytest.warns(UserWarning, match="pos is not numeric"):
+        fixture = load_fixture(load_converter().convert_file(mat, tmp_path))
+    assert "pos" not in fixture.arrays and fixture.metadata["pos_labels"] == "C|C#"

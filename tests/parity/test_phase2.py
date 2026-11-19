@@ -15,7 +15,13 @@ import numpy as np
 import pytest
 
 import mirpy as mir
-from parity.cases import cases_with_fixtures, check_signal, load_matlab_case
+from parity.cases import (
+    BINS_ALONG_FRAMES,
+    STANDARD,
+    cases_with_fixtures,
+    check_signal,
+    load_matlab_case,
+)
 from parity.harness import PHASE2_CASES, Stage, from_matlab_axes, read_cases
 
 CALLS = read_cases(PHASE2_CASES)
@@ -117,7 +123,8 @@ def test_cases_match_the_matlab_case_list():
 def test_matlab_case(feature, stem, mirtoolbox_fixture, fixture_audio, assert_parity):
     ref, path = load_matlab_case(feature, stem, CALLS, mirtoolbox_fixture, fixture_audio)
     build, stage = CASES[feature]
-    check_signal(build(path), ref, stage, f"{stem}: {feature}", assert_parity)
+    layout = BINS_ALONG_FRAMES if feature.startswith("histo") else STANDARD
+    check_signal(build(path), ref, stage, f"{stem}: {feature}", assert_parity, layout)
 
 
 @pytest.mark.parametrize(("feature", "stem"), cases_with_fixtures(STAT_CASES))
