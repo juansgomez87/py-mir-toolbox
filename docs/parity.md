@@ -35,7 +35,7 @@ Markdown(report_markdown("parity/results.json"))
 
 **MIRtoolbox behaviour that differs from its manual or from MiningSuite.** py-mir-toolbox follows MIRtoolbox in each case. Each behaviour was found by comparing outputs, and confirmed on synthetic signals where needed:
 
-- `mircentroid`, `mirspread`, `mirskewness`, `mirkurtosis` weight the spectrum *plus its own minimum*, not the spectrum itself. This probably explains the "slight overestimate" of the centroid reported by Kazazis et al. (2017).
+- `mircentroid`, `mirspread`, `mirskewness`, `mirkurtosis` weight the spectrum *plus its own minimum*, not the spectrum itself. This probably explains the "slight overestimate" of the centroid reported by Kazazis et al. (2017)[^kazazis].
 - `mirkurtosis` is the plain kurtosis (3 for a Gaussian), not the excess kurtosis described in the manual.
 - `mirrms` divides by the number of samples minus one on a whole file, and by the number of samples on frames.
 - `mirautocor` divides by the autocorrelation of a continuous Hann window, also for the generalized (`'Compres'`) autocorrelation.
@@ -59,3 +59,5 @@ make parity-report
 ```
 
 This runs `tests/parity` and writes `docs/parity/results.json`; commit it when the results change.
+
+[^kazazis]: Kazazis, S., Esterer, N., Depalle, P., & McAdams, S. (2017). A performance evaluation of the Timbre Toolbox and the MIRtoolbox on calibrated test sounds. *Proceedings of the International Symposium on Musical Acoustics (ISMA)*, Montréal.

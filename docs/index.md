@@ -27,7 +27,13 @@ MIRtoolbox commands and their Python equivalents, side by side.
 :::{grid-item-card} Course
 :link: chapters/index
 :link-type: doc
-Chapters in the style of the FMP notebooks. Each concept is computed from scratch in NumPy, then with mirpy, librosa and Essentia.
+Notebooks that compute each feature from scratch in NumPy, then with mirpy, librosa and Essentia, and explain where the numbers differ.
+:::
+
+:::{grid-item-card} API reference
+:link: api
+:link-type: doc
+Every function, its options and their MIRtoolbox names.
 :::
 
 :::{grid-item-card} Parity report
