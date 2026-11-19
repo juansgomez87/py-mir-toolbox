@@ -37,8 +37,65 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
 
-  publish-pypi:
+  install-testpypi:
+    # Install the TestPyPI upload in a clean venv on each OS before publishing
+    # to PyPI. No checkout, so the installed package is tested, not the source.
     needs: publish-testpypi
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.12", "3.14"]  # lowest and highest supported
+    defaults:
+      run:
+        shell: bash
+    env:
+      TESTPYPI: https://test.pypi.org/simple/
+      PACKAGE: py-mir-toolbox
+      INDEX_ATTEMPTS: 5
+      INDEX_WAIT_SECONDS: 30
+    steps:
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: false  # a clean install, nothing restored from earlier runs
+      - name: Create a clean venv
+        run: |
+          uv venv clean-venv --python ${{ matrix.python-version }}
+          if [ "$RUNNER_OS" = Windows ]; then py=clean-venv/Scripts/python; else py=clean-venv/bin/python; fi
+          echo "PY=$py" >> "$GITHUB_ENV"
+          echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+      - name: Install the package from TestPyPI
+        # Only the package comes from TestPyPI (--no-deps); its dependencies come
+        # from PyPI, so a look-alike upload on TestPyPI cannot replace them.
+        run: |
+          for attempt in $(seq "$INDEX_ATTEMPTS"); do
+            uv pip install --python "$PY" --no-deps --index-url "$TESTPYPI" "$PACKAGE==$VERSION" && break
+            [ "$attempt" = "$INDEX_ATTEMPTS" ] && exit 1
+            sleep "$INDEX_WAIT_SECONDS"  # the upload can take a minute to be listed
+          done
+          "$PY" -c "import importlib.metadata as m; print('\n'.join(m.requires('$PACKAGE') or []))" > requirements.txt
+          uv pip install --python "$PY" -r requirements.txt
+      - name: Smoke test
+        run: |
+          "$PY" - <<'PY'
+          import importlib.metadata
+          import os
+
+          import numpy as np
+
+          import mirpy as mir
+
+          assert importlib.metadata.version(os.environ["PACKAGE"]) == os.environ["VERSION"]
+          sr = 22050
+          sine = np.sin(2 * np.pi * 440 * np.arange(sr) / sr)
+          rms = mir.rms(mir.Audio.from_array(sine, sr=sr)).data.item()
+          assert abs(rms - 1 / np.sqrt(2)) < 1e-3, rms
+          print("mirpy", mir.__version__, "rms", rms)
+          PY
+
+  publish-pypi:
+    needs: install-testpypi
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
