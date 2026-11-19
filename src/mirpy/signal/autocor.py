@@ -21,12 +21,14 @@ from mirpy.core import framing
 from mirpy.core.data import Signal
 from mirpy.core.matlab_compat import matlab_round, matlab_window, xcorr
 from mirpy.core.options import FrameArg
+from mirpy.signal._lag_axis import as_frequencies
 from mirpy.signal.spectrum import Spectrum
 
 SCALES = ("coeff", "biased", "unbiased", "none", "coeff_x_channels")
 AUTO = "auto"
 DEFAULT_MAX_LAG = 0.05  # seconds, for audio sampled above 1 kHz
 LOW_RATE = 1000  # Hz: below it, no default lag limit and rectangular window
+LAG_DIGITS = 9  # rounding before ceil, so 44100 / 441 Hz stays 100 lags
 STANDARD_EXPONENT = 2.0  # generalized=2 is the ordinary autocorrelation
 
 
@@ -156,16 +158,22 @@ def autocor(
     first, last = _main_lag_range(min_lag, max_lag, sampling, x.n_elements)
     if explicit_range:
         first, last = _after_lag_range(first, last, min_lag, max_lag, sampling)
+    if max_freq is not None:
+        # MIRtoolbox rounds a frequency bound up to a whole lag (fixtures, 2026-11-18)
+        first = max(first, math.ceil(round(sampling / max_freq, LAG_DIGITS)))
 
     data, window_autocor = _correlate(x, first, last, scale, generalized, window)
     normalized = bool(normal_window and window_autocor is not None)
     if normalized:
         data = data / window_autocor
     lags = np.arange(first, last + 1) / sampling
+    x_values = lags
+    if freq:
+        data, x_values = as_frequencies(data, lags)
     result = Autocor(
         data=data,
         sr=x.sr,
-        x_values=1 / lags if freq else lags,
+        x_values=x_values,
         x_name="frequency" if freq else "lag",
         x_unit="Hz" if freq or of_spectrum else "s",
         start=x.start,

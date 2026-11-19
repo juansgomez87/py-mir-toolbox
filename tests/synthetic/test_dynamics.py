@@ -23,12 +23,16 @@ def energy_curve(values):
 
 
 def test_rms_of_sine_is_amplitude_over_root_two():
-    assert rms(tone(amplitude=0.5)).data.item() == pytest.approx(0.5 / np.sqrt(2), rel=1e-6)
+    framed = rms(tone(amplitude=0.5), frame=(0.1, 1.0))  # whole periods per frame
+    np.testing.assert_allclose(framed.data, 0.5 / np.sqrt(2), rtol=1e-9)
 
 
 def test_rms_divides_by_samples_not_seconds():
-    x = Audio.from_array(np.full(SR // 2, 0.3), sr=SR)
-    assert rms(x).data.item() == pytest.approx(0.3)
+    n = SR // 2
+    x = Audio.from_array(np.full(n, 0.3), sr=SR)
+    # MIRtoolbox 1.8.2: an unframed signal is divided by n - 1, a frame by n
+    assert rms(x).data.item() == pytest.approx(0.3 * np.sqrt(n / (n - 1)))
+    assert rms(x, frame=True).data[0, 0, 0] == pytest.approx(0.3)
 
 
 def test_framed_rms_keeps_frame_positions():
@@ -48,7 +52,7 @@ def test_rms_median():
 def test_rms_per_channel():
     y = np.vstack([np.full(100, 1.0), np.full(100, 2.0)])
     r = rms(Audio.from_array(y, sr=SR, mono=False))
-    np.testing.assert_allclose(r.data.ravel(), [1.0, 2.0])
+    np.testing.assert_allclose(r.data.ravel(), np.array([1.0, 2.0]) * np.sqrt(100 / 99))
 
 
 def test_lowenergy_counts_frames_below_average():

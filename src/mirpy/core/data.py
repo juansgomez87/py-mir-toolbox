@@ -15,6 +15,7 @@ This is the order librosa uses (channels, features, frames). MIRtoolbox
 uses ``(element, frame, channel)``.
 """
 
+import math
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
@@ -24,6 +25,7 @@ import numpy as np
 N_AXES = 3
 CHANNEL_AXIS, ELEMENT_AXIS, FRAME_AXIS = 0, 1, 2
 PEAK_AXES = ("element", "frame")
+SAMPLE_TOLERANCE = 1e-9  # so 0.05 s * 44100 Hz counts as 2205 samples
 
 
 @dataclass(frozen=True, eq=False)
@@ -194,10 +196,16 @@ class Signal:
 
     @property
     def frame_ends(self) -> np.ndarray | None:
-        """End time of each frame, in seconds."""
+        """Time of the last sample of each frame, in seconds.
+
+        MIRtoolbox's convention (``'FramePos'``, checked against the 1.8.2
+        fixtures): a 2205-sample frame starting at 0 s ends at 2204 / sr,
+        not at 2205 / sr.
+        """
         if self.frame_starts is None:
             return None
-        return self.frame_starts + self.frame_length
+        n_samples = math.floor(self.frame_length * self.sr + SAMPLE_TOLERANCE)
+        return self.frame_starts + (n_samples - 1) / self.sr
 
     @property
     def frame_centers(self) -> np.ndarray | None:

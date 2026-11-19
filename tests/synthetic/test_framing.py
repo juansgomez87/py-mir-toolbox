@@ -47,7 +47,7 @@ def test_frame_content_is_the_signal_slice(ramp):
     framed = frame(ramp, FrameSpec(size=100, size_unit="sp", hop=30, hop_unit="sp"))
     np.testing.assert_array_equal(framed.data[0, :, 2], np.arange(60, 160))
     np.testing.assert_allclose(framed.frame_starts[:3], np.array([0, 30, 60]) / SR)
-    np.testing.assert_allclose(framed.frame_ends[0], 100 / SR)
+    np.testing.assert_allclose(framed.frame_ends[0], 99 / SR)  # last sample, as MIRtoolbox
 
 
 def test_fractional_hop_uses_floor(ramp):

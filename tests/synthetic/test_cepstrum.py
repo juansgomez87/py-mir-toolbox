@@ -51,7 +51,8 @@ def test_frequency_bounds():
 def test_freq_axis_is_inverse_quefrency():
     c = cepstrum(harmonic_tone(), freq=True)
     q = cepstrum(harmonic_tone())
-    np.testing.assert_allclose(c.x_values, 1 / q.x_values)
+    np.testing.assert_allclose(c.x_values, 1 / q.x_values[::-1])  # low to high, as MIRtoolbox
+    np.testing.assert_array_equal(c.data, q.data[:, ::-1])
     assert c.x_name == "frequency" and c.x_unit == "Hz"
 
 

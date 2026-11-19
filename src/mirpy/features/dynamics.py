@@ -3,8 +3,9 @@
 ``rms`` is translated from MiningSuite ``+sig/rms.m`` (BSD-3, Olivier
 Lartillot), with one fix: MiningSuite divides the sum of squares by the
 signal length in *seconds* (``Ssize``), which gives sqrt(sr) times the
-RMS. mirpy divides by the number of samples, as the MIRtoolbox manual
-describes (RMS of ``ragtime.wav`` = 0.01793).
+RMS. mirpy follows MIRtoolbox 1.8.2 as measured on its outputs: a frame is
+divided by its number of samples N, an unframed signal by N - 1 (RMS of
+``ragtime.wav`` = 0.01793, as in the manual).
 
 ``lowenergy`` is not in MiningSuite. It is written from the MIRtoolbox
 manual: the share of frames whose energy is below the average
@@ -26,7 +27,9 @@ ASR_THRESHOLD = 0.5
 def rms(x: Signal, *, frame: FrameArg = False, median: bool = False) -> Signal:
     """Compute the root-mean-square energy of the signal, or of each frame.
 
-    Equivalent to MIRtoolbox ``mirrms``.
+    Equivalent to MIRtoolbox ``mirrms``. Like MIRtoolbox, the sum of
+    squares is divided by the frame length for framed signals, but by
+    ``n_samples - 1`` for an unframed signal.
 
     Parameters
     ----------
@@ -53,13 +56,16 @@ def rms(x: Signal, *, frame: FrameArg = False, median: bool = False) -> Signal:
     >>> import numpy as np
     >>> from mirpy import Audio
     >>> tone = Audio.from_array(np.sin(2 * np.pi * 100 * np.arange(8000) / 8000), sr=8000)
-    >>> round(float(rms(tone).data.item()), 4)
+    >>> round(float(rms(tone, frame=True).data.mean()), 4)
     0.7071
     """
     x = framing.frame(x, frame)
     squares = x.data**2
-    average = np.median if median else np.mean
-    values = np.sqrt(average(squares, axis=ELEMENT_AXIS))
+    if median:
+        values = np.sqrt(np.median(squares, axis=ELEMENT_AXIS))
+    else:
+        count = x.n_elements if x.is_framed else x.n_elements - 1
+        values = np.sqrt(np.sum(squares, axis=ELEMENT_AXIS) / count)
     result = feature_signal(x, values, "RMS")
     return with_params(result, "rms", {"median": median})
 

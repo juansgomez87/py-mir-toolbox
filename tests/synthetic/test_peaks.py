@@ -91,7 +91,7 @@ def matlab_search(y, x, cthr, first, thr, reso, resofirst, m, order, nobegin, no
 
     pp, pv = [], []
     for i in p:
-        if i > 2 and i < n:
+        if 1 < i < n:  # MIRtoolbox: both neighbours exist (MiningSuite: i > 2)
             y0, ym, yp = ys[i + 1], ys[i], ys[i + 2]
             r = (yp - ym) / (2 * (2 * y0 - yp - ym))
             pv.append(y0 - 0.25 * (ym - yp) * r)
@@ -123,7 +123,6 @@ def test_matches_literal_peaks_m(seed, options):
     rng = np.random.default_rng(seed)
     y = rng.random(60)
     y = (y - y.min()) / np.ptp(y)  # global normalisation is then the identity
-    y[-1] = 0  # keep the last point off the +-inf interpolation quirk
     x = np.arange(60, dtype=float) * 0.5
     expected_index, expected_pos, expected_val = matlab_search(
         list(y),
@@ -205,15 +204,17 @@ def test_local_normalisation_val_original():
         np.testing.assert_allclose(sub.val_original, data[sub.index, f], atol=1e-12)
 
 
-def test_last_point_interpolation_quirk_is_ported():
-    found = peaks(curve_signal([0, 0.2, 0.4, 0.6, 1.0])).peaks
+def test_peak_on_last_point_is_not_interpolated():
+    # MIRtoolbox 1.8.2 fixtures: the Nyquist-bin valley sits at 22050 Hz with its own value
+    found = peaks(curve_signal([0, 0.2, 0.4, 0.6, 1.0], x_values=np.arange(5.0))).peaks
     np.testing.assert_array_equal(found.index, [4])
-    assert found.pos[0] == 0.0 and np.isnan(found.val[0])
+    assert found.pos[0] == 4.0 and found.val[0] == 1.0
 
 
-def test_first_two_points_are_not_interpolated():
+def test_peak_on_second_point_is_interpolated():
+    # MIRtoolbox interpolates index 1 (MiningSuite skipped it)
     found = peaks(curve_signal([0, 1.0, 0.2, 0, 0], x_values=np.arange(5.0))).peaks
-    assert found.pos[0] == 1.0 and found.val[0] == 1.0
+    assert 1.0 < found.pos[0] < 1.5 and found.val[0] > 1.0  # pulled toward the higher side
 
 
 def test_framed_one_element_feature_searches_frames():

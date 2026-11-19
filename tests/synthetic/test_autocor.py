@@ -52,9 +52,12 @@ def test_explicit_bounds_use_matlab_round():
 
 
 def test_frequency_bounds_convert_to_lags():
+    # MIRtoolbox 1.8.2 fixtures: 1 ms rounds to lag 44 at 44.1 kHz, but 1000 Hz
+    # (44.1 lags) rounds up to lag 45, so the Hz range starts one lag later.
     by_freq = autocor(noise(), min_freq=100, max_freq=1000)
     by_lag = autocor(noise(), min_lag=1 / 1000, max_lag=1 / 100)
-    np.testing.assert_array_equal(by_freq.data, by_lag.data)
+    assert by_freq.x_values[0] == pytest.approx(45 / SR)
+    np.testing.assert_array_equal(by_freq.data, by_lag.data[:, 1:])
     with pytest.raises(ValueError, match="either in seconds or in Hz"):
         autocor(noise(), min_lag=0.001, max_freq=1000)
 
@@ -119,10 +122,12 @@ def test_autocor_of_spectrum_has_hz_lags_and_no_window():
     assert a.n_elements == math.ceil(s.n_elements / 2)
 
 
-def test_freq_axis_is_inverse_lag():
-    a = autocor(noise(), min_lag=0.001, freq=True)
-    lags = autocor(noise(), min_lag=0.001)
-    np.testing.assert_allclose(a.x_values, 1 / lags.x_values)
+def test_freq_axis_is_inverse_lag_in_increasing_order():
+    a = autocor(noise(), freq=True)
+    lags = autocor(noise())
+    # MIRtoolbox drops lag 0 and lists frequencies from low to high
+    np.testing.assert_allclose(a.x_values, 1 / lags.x_values[1:][::-1])
+    np.testing.assert_array_equal(a.data, lags.data[:, 1:][:, ::-1])
     assert a.x_name == "frequency" and a.x_unit == "Hz"
 
 

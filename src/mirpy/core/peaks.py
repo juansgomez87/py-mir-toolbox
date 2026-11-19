@@ -8,10 +8,13 @@ MiningSuite quirks kept on purpose, to be checked against the MIRtoolbox
 
 - ``Peaks.val`` is read on the normalised curve; ``Peaks.val_original``
   converts it back to the signal's units.
-- Quadratic interpolation is skipped for the first two positions
-  (``p > 2`` in 1-based ``peaks.m``).
-- A peak on the last position is interpolated against the padding value
-  (±inf), which gives ``pos == 0`` and ``val == nan``.
+
+Fixed after the MIRtoolbox fixtures (2026-11-18): MiningSuite skips the
+quadratic interpolation for the first two positions (``p > 2``) and
+interpolates a peak on the last position against the ±inf padding
+(``pos == 0``, ``val == nan``). MIRtoolbox interpolates every peak that
+has a neighbour on both sides and leaves the first and last positions as
+they are, so mirpy does the same.
 - ``normalize="global"`` scales by the minimum and maximum of the whole
   signal, all channels and frames together.
 """
@@ -288,14 +291,13 @@ def _interpolate(padded, x, candidates) -> tuple[np.ndarray, np.ndarray]:
     """Parabolic refinement of position and height, as in ``peaks.m``."""
     pos = x[candidates].astype(np.float64)
     val = padded[candidates + 1].copy()
-    inner = candidates >= 2
+    inner = (candidates >= 1) & (candidates <= len(x) - 2)  # both neighbours exist
     p = candidates[inner]
     peak, before, after = padded[p + 1], padded[p], padded[p + 2]
     with np.errstate(invalid="ignore", divide="ignore"):
         r = (after - before) / (2 * (2 * peak - after - before))
         val[inner] = peak - 0.25 * (before - after) * r
-        next_x = x[np.minimum(p + 1, len(x) - 1)]
-        toward_next = (1 - r) * x[p] + r * next_x
+        toward_next = (1 - r) * x[p] + r * x[p + 1]
         toward_previous = (1 + r) * x[p] - r * x[p - 1]
     pos[inner] = np.where(r >= 0, toward_next, np.where(r < 0, toward_previous, 0.0))
     return pos, val

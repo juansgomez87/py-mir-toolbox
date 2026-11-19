@@ -22,6 +22,7 @@ import numpy as np
 from mirpy.core import framing
 from mirpy.core.data import Signal
 from mirpy.core.options import FrameArg
+from mirpy.signal._lag_axis import as_frequencies
 from mirpy.signal.spectrum import Spectrum, spectrum
 
 DEFAULT_MIN_QUEFRENCY = 0.0002  # seconds
@@ -106,10 +107,11 @@ def cepstrum(
     full = np.abs(np.fft.fft(np.log(mirrored + LOG_FLOOR), axis=1))
     stop = min(stop, full.shape[1] // 2)
     quefrencies = np.arange(first, stop) / x.sr
-    with np.errstate(divide="ignore"):
-        x_values = 1 / quefrencies if freq else quefrencies
+    data, x_values = full[:, first:stop], quefrencies
+    if freq:
+        data, x_values = as_frequencies(data, quefrencies)
     result = Cepstrum(
-        data=full[:, first:stop],
+        data=data,
         sr=x.sr,
         x_values=x_values,
         x_name="frequency" if freq else "quefrency",

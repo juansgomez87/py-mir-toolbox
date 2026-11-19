@@ -50,7 +50,8 @@ def test_file_table_rejects_missing_features():
 def test_frame_table_has_frame_positions():
     table = frame_table({"c": framed([1, 2, 3], "Centroid"), "r": framed([4, 5, 6], "Rolloff")})
     assert table["frame_start"] == [0.0, 0.5, 1.0]
-    assert table["frame_end"] == [0.5, 1.0, 1.5]
+    last_sample = (0.5 * SR - 1) / SR  # MIRtoolbox: end = time of the last sample
+    assert table["frame_end"] == pytest.approx([last_sample, 0.5 + last_sample, 1.0 + last_sample])
     assert table["Centroid"] == [1, 2, 3]
 
 
