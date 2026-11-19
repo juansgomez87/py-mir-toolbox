@@ -183,8 +183,10 @@ def _subtract_median(x: Signal, length: float, scale: float) -> Signal:
     half = int(matlab_round(length * x.frame_rate))
     data = x.data.copy()
     n = x.n_frames
+    # MIRtoolbox 1.8.2 (fixtures, 2026-11-18): the last frame is left out of every window
+    end = n - 1
     for i in range(n):
-        window = x.data[..., max(0, i - half) : min(n, i + half + 1)]
+        window = x.data[..., max(0, i - half) : min(end, i + half + 1)]
         data[..., i] = x.data[..., i] - scale * np.median(window, axis=FRAME_AXIS)
     return replace(x, data=data)
 

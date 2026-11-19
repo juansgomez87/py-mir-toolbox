@@ -93,7 +93,8 @@ def test_complex_needs_a_waveform():
 def test_median_and_halfwave():
     x = frames([[0, 1, 1, 1, 5, 5, 5]])  # flux: 1 0 0 4 0 0
     f = flux(x, median=(0.1, 1.0)).data.ravel()  # 1 frame each side at 10 Hz
-    np.testing.assert_allclose(f, [1 - 0.5, 0, 0, 4, 0, 0])
+    # MIRtoolbox leaves the last frame out of every window: index 4 sees [4, 0]
+    np.testing.assert_allclose(f, [1 - 0.5, 0, 0, 4, 0 - 2, 0])
     rectified = flux(x, median=(0.1, 2.0), halfwave=True).data.ravel()
     assert rectified.min() == 0 and rectified[3] == 4
     np.testing.assert_array_equal(flux(x, median=True).data, flux(x, median=(0.2, 1.0)).data)
