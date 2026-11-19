@@ -54,7 +54,7 @@ Pitch, tonality, rhythm and structure follow in later releases.
 
 - Website: https://ccrma.stanford.edu/~jsgomezc/py-mir-toolbox
 - [API reference](https://ccrma.stanford.edu/~jsgomezc/py-mir-toolbox/docs/api.html) and [Parity report](https://ccrma.stanford.edu/~jsgomezc/py-mir-toolbox/docs/parity.html)
-- Course chapters (open in Colab from each page): [Basics](https://ccrma.stanford.edu/~jsgomezc/py-mir-toolbox/docs/chapters/B_basics.html), [Dynamics](https://ccrma.stanford.edu/~jsgomezc/py-mir-toolbox/docs/chapters/C3_dynamics.html), [Spectral shape](https://ccrma.stanford.edu/~jsgomezc/py-mir-toolbox/docs/chapters/C4a_spectral_shape.html), [MFCCs, flux and statistics](https://ccrma.stanford.edu/~jsgomezc/py-mir-toolbox/docs/chapters/C4b_mfcc_flux_statistics.html)
+- Course chapters (open in Colab from each page): [0 · Basics](https://ccrma.stanford.edu/~jsgomezc/py-mir-toolbox/docs/chapters/00_basics.html), [1 · Frames and dynamics](https://ccrma.stanford.edu/~jsgomezc/py-mir-toolbox/docs/chapters/01_dynamics.html), [2 · The spectrum and its shape](https://ccrma.stanford.edu/~jsgomezc/py-mir-toolbox/docs/chapters/02_spectral_shape.html), [3 · MFCCs and spectral flux](https://ccrma.stanford.edu/~jsgomezc/py-mir-toolbox/docs/chapters/03_mfcc_flux.html), [4 · From curves to a table for statistics](https://ccrma.stanford.edu/~jsgomezc/py-mir-toolbox/docs/chapters/04_statistics_export.html)
 
 ## Credits and citing
 

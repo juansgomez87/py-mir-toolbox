@@ -1,6 +1,6 @@
 # Course
 
-The course starts with the Python you need as a MIRtoolbox user. Each chapter after that introduces a musical or perceptual concept and computes it in four ways:
+Chapter 0 covers the Python you need as a MIRtoolbox user. Each chapter after that introduces a musical or perceptual concept and computes it in four ways:
 
 1. from scratch with NumPy, so the maths is visible;
 2. with py-mir-toolbox, which reproduces MIRtoolbox;
@@ -14,8 +14,9 @@ The chapter layout follows the [FMP notebooks](https://www.audiolabs-erlangen.de
 ```{toctree}
 :maxdepth: 1
 
-B_basics
-C3_dynamics
-C4a_spectral_shape
-C4b_mfcc_flux_statistics
+00_basics
+01_dynamics
+02_spectral_shape
+03_mfcc_flux
+04_statistics_export
 ```

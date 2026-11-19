@@ -21,6 +21,8 @@ dist/
 # Docs
 docs/_build/
 docs/jupyter_execute/
+# Written by chapter 0 of the course
+docs/chapters/*.wav
 
 # Validation fixtures live in a separate repository
 validation/fixtures/

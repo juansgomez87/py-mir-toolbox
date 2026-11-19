@@ -15,4 +15,4 @@ py-mir-toolbox keeps the MIRtoolbox function names without the `mir` prefix, and
 
 `mir.batch` reads `*.wav` files by default; pass `pattern="*.flac"` for other formats. To export a framed feature frame by frame, use `mir.to_csv(mir.frame_table({"r": r}), "frames.csv")`.
 
-Each course chapter ends with a table of the MIRtoolbox functions it covers and their mirpy, librosa and Essentia equivalents: {doc}`chapters/C3_dynamics`, {doc}`chapters/C4a_spectral_shape`, {doc}`chapters/C4b_mfcc_flux_statistics`.
+Each course chapter ends with a table of the MIRtoolbox functions it covers and their mirpy, librosa and Essentia equivalents: {doc}`chapters/01_dynamics`, {doc}`chapters/02_spectral_shape`, {doc}`chapters/03_mfcc_flux`, {doc}`chapters/04_statistics_export`.

@@ -46,7 +46,8 @@ myst_enable_extensions = ["colon_fence", "dollarmath"]
 nb_execution_mode = "cache"
 nb_execution_timeout = 300
 nb_render_markdown_format = "myst"  # tables in generated Markdown (Parity report)
-exclude_patterns = ["_build", "jupyter_execute", "parity_report.py"]
+exclude_patterns = ["_build", "_redirects", "jupyter_execute", "parity_report.py"]
+html_extra_path = ["_redirects"]  # old chapter URLs (B_basics.html, ...) forward to the new ones
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
