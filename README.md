@@ -12,11 +12,19 @@ MIRtoolbox (Lartillot & Toiviainen, 2007) is the MATLAB toolbox most music cogni
 
 ## Install
 
+py-mir-toolbox needs Python 3.12 or newer.
+
 ```bash
 pip install py-mir-toolbox
 ```
 
-Optional extras: `py-mir-toolbox[export]` (pandas, for `mir.to_dataframe`), `py-mir-toolbox[parallel]` (joblib, for `mir.batch(..., n_jobs=4)`), `py-mir-toolbox[librosa]`.
+Optional extras (keep the quotes; zsh, the default macOS shell, needs them):
+
+```bash
+pip install "py-mir-toolbox[export]"    # pandas, for mir.to_dataframe
+pip install "py-mir-toolbox[parallel]"  # joblib, for mir.batch(..., n_jobs=4)
+pip install "py-mir-toolbox[course]"    # librosa, pandas and JupyterLab, to run the course notebooks
+```
 
 ## Example
 
@@ -27,7 +35,7 @@ a = mir.audio("song.wav")  # a = miraudio('song.wav')
 rms = mir.rms(a, frame=True)  # mirrms(a, 'Frame')
 mir.stat(mir.centroid(a, frame=True))  # mirstat(mircentroid(a, 'Frame'))
 
-# One row per file of a folder, saved for R, SPSS or JASP
+# One row per WAV file of a folder (pattern="*.flac" for others), saved for R, SPSS or JASP
 features = {"rms": mir.rms, "centroid": lambda a: mir.centroid(a, frame=True)}
 mir.to_csv(mir.file_table(mir.batch("songs/", features)), "features.csv")
 ```

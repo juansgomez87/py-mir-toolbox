@@ -103,7 +103,7 @@ def frame_table(features: FeatureSet) -> Table:
 def to_dataframe(table: Table):
     """Convert a table to a :class:`pandas.DataFrame`.
 
-    Requires pandas (``pip install py-mir-toolbox[export]``).
+    Requires pandas (``pip install "py-mir-toolbox[export]"``).
     """
     try:
         import pandas as pd
