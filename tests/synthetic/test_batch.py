@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import pytest
 import soundfile as sf
@@ -25,7 +27,7 @@ def songs(tmp_path):
 
 
 def file_names(rows):
-    return [next(iter(row.values())).source.split("/")[-1] for row in rows]
+    return [Path(next(iter(row.values())).source).name for row in rows]
 
 
 def test_folder_files_are_sorted_and_filtered(songs):
