@@ -253,9 +253,30 @@ def _correlate(x: Signal, first, last, scale, generalized, window):
     else:
         c = xcorr(data, last, scale, axis=1)[:, lags]
     window_autocor = None
-    if taper is not None:
+    if window == "hanning":
+        # Quirk: indexed by position in the returned range, not by the actual lag
+        positions = np.arange(last + 1 - first)
+        window_autocor = hanning_autocor(positions, x.n_elements)[None, :, None]
+    elif taper is not None:
         window_autocor = xcorr(taper, last, "coeff")[lags][None, :, None]
     return c, window_autocor
+
+
+def hanning_autocor(positions: np.ndarray, n: int) -> np.ndarray:
+    """Normalised autocorrelation of a continuous Hann window, as MIRtoolbox divides by.
+
+    MIRtoolbox 1.8.2 does not divide by the autocorrelation of the sampled
+    window but by that of a continuous Hann window, at ``tau = (j + 1) /
+    (n + 1)``, where ``j`` is the position in the returned lag range: when
+    the range starts at lag 53, lag 53 is divided by ``R(1 / (n + 1))``.
+    Measured on its outputs (frame lengths 512 to 4096 samples, cut and
+    full lag ranges, agreement to 1e-12), 2026-11-18::
+
+        R(tau) = ((1 - tau) (2 + cos 2 pi tau) + 3 / (2 pi) sin 2 pi tau) / 3
+    """
+    tau = (np.asarray(positions) + 1) / (n + 1)
+    angle = 2 * np.pi * tau
+    return ((1 - tau) * (2 + np.cos(angle)) + 3 / (2 * np.pi) * np.sin(angle)) / 3
 
 
 def _halfwave(a: Autocor) -> Autocor:

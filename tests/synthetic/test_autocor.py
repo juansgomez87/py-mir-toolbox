@@ -14,11 +14,17 @@ def noise(n=4410, sr=SR, seed=0, channels=1):
     return Audio.from_array(y, sr=sr, mono=False)
 
 
+def continuous_hann_autocor(tau):
+    return (
+        (1 - tau) * (2 + np.cos(2 * np.pi * tau)) + 3 / (2 * np.pi) * np.sin(2 * np.pi * tau)
+    ) / 3
+
+
 def reference_autocor(y, window, last):
-    """Centre, window, xcorr 'coeff', divide by the window's own 'coeff' autocor."""
+    """Centre, window, xcorr 'coeff', divide by the continuous Hann autocor (MIRtoolbox 1.8.2)."""
     y = (y - y.mean()) * window
     c = xcorr(y, last, "coeff")[last:]
-    return c / xcorr(window, last, "coeff")[last:]
+    return c / continuous_hann_autocor((np.arange(last + 1) + 1) / (len(y) + 1))
 
 
 def test_default_matches_reference_steps():
@@ -40,7 +46,9 @@ def test_low_rate_signal_has_no_lag_limit_and_rectangular_window():
     x = noise(n=200, sr=100)
     a = autocor(x)
     assert a.n_elements == 100  # lags 0 .. ceil(200 / 2) - 1
-    expected = reference_autocor(x.data[0, :, 0], np.ones(200), 99)
+    # rectangular window: divided by its sampled autocorrelation (no fixture covers this case)
+    y = x.data[0, :, 0] - x.data[0, :, 0].mean()
+    expected = xcorr(y, 99, "coeff")[99:] / xcorr(np.ones(200), 99, "coeff")[99:]
     np.testing.assert_allclose(a.data[0, :, 0], expected, rtol=1e-10)
 
 
@@ -57,7 +65,25 @@ def test_frequency_bounds_convert_to_lags():
     by_freq = autocor(noise(), min_freq=100, max_freq=1000)
     by_lag = autocor(noise(), min_lag=1 / 1000, max_lag=1 / 100)
     assert by_freq.x_values[0] == pytest.approx(45 / SR)
-    np.testing.assert_array_equal(by_freq.data, by_lag.data[:, 1:])
+    np.testing.assert_allclose(by_freq.x_values, by_lag.x_values[1:])
+    raw_freq = autocor(noise(), min_freq=100, max_freq=1000, normal_window=False)
+    raw_lag = autocor(noise(), min_lag=1 / 1000, max_lag=1 / 100, normal_window=False)
+    np.testing.assert_array_equal(raw_freq.data, raw_lag.data[:, 1:])
+
+
+def test_window_normalisation_restarts_at_the_first_returned_lag():
+    # MIRtoolbox 1.8.2: lag k of a range starting at `first` is divided by
+    # R((k - first + 1) / (n + 1)), not by R((k + 1) / (n + 1))
+    cut = autocor(noise(), min_lag=0.002)
+    full = autocor(noise())
+    first = round(cut.x_values[0] * SR)
+    n = 4410
+    expected = (
+        full.data[0, first : first + cut.n_elements, 0]
+        * continuous_hann_autocor((np.arange(first, first + cut.n_elements) + 1) / (n + 1))
+        / continuous_hann_autocor((np.arange(cut.n_elements) + 1) / (n + 1))
+    )
+    np.testing.assert_allclose(cut.data[0, :, 0], expected, rtol=1e-10)
     with pytest.raises(ValueError, match="either in seconds or in Hz"):
         autocor(noise(), min_lag=0.001, max_freq=1000)
 
