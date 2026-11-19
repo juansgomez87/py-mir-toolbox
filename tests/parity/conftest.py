@@ -7,45 +7,38 @@ from parity.harness import (
     fixtures_dir,
     load_fixture,
     report_path,
+    run_metadata,
     write_report,
 )
 
 
 @pytest.fixture(scope="session")
-def parity_results():
+def fixture_metadata():
+    """Metadata of every fixture loaded in the session, for the report's run description."""
+    return []
+
+
+@pytest.fixture(scope="session")
+def parity_results(fixture_metadata):
     results = []
     yield results
     if results:
-        write_report(results, report_path())
+        write_report(results, report_path(), run_metadata(fixture_metadata))
 
 
 @pytest.fixture
-def mirtoolbox_fixture():
+def mirtoolbox_fixture(fixture_metadata):
     """Load ``<stem>__<feature>.npz``; skip the test when it is not available."""
 
     def load(stem: str, feature: str):
         path = fixtures_dir() / f"{stem}__{feature}.npz"
         if not path.exists():
             pytest.skip(f"MIRtoolbox fixture not found: {path}")
-        return load_fixture(path)
+        fixture = load_fixture(path)
+        fixture_metadata.append(fixture.metadata)
+        return fixture
 
     return load
-
-
-@pytest.fixture
-def record_parity(parity_results):
-    """Compare and record for the parity report without asserting.
-
-    For open questions (e.g. which of two conventions MIRtoolbox uses):
-    both hypotheses are recorded and the report shows which one holds.
-    """
-
-    def record(actual, expected, stage, feature):
-        result = compare(actual, expected, stage, feature)
-        parity_results.append(result)
-        return result
-
-    return record
 
 
 @pytest.fixture

@@ -140,9 +140,7 @@ def test_matlab_case(feature, stem, mirtoolbox_fixture, fixture_audio, assert_pa
 
 
 @pytest.mark.parametrize(("feature", "stem"), cases_with_fixtures(PEAK_CASES))
-def test_matlab_peaks(
-    feature, stem, mirtoolbox_fixture, fixture_audio, assert_parity, record_parity
-):
+def test_matlab_peaks(feature, stem, mirtoolbox_fixture, fixture_audio, assert_parity):
     ref, path = load_matlab_case(feature, stem, CALLS, mirtoolbox_fixture, fixture_audio)
     found = PEAK_CASES[feature](path).peaks
     expected = matlab_peaks(ref)
@@ -151,11 +149,8 @@ def test_matlab_peaks(
     assert_parity(found.frame, expected["frame"], Stage.EXACT, f"{label} frame")
     assert_parity(found.index, expected["index"], Stage.DISCRETE, f"{label} index")
     assert_parity(found.pos, expected["precise_pos"], Stage.LINEAR, f"{label} position")
-    # Open quirk: is MIRtoolbox's peak height normalised (MiningSuite) or in signal units?
-    record_parity(found.val, expected["precise_val"], Stage.LINEAR, f"{label} val (normalised)")
-    record_parity(
-        found.val_original, expected["precise_val"], Stage.LINEAR, f"{label} val (original)"
-    )
+    # MIRtoolbox reports peak heights in signal units, not normalised (fixtures, 2026-11-19)
+    assert_parity(found.val_original, expected["precise_val"], Stage.LINEAR, f"{label} val")
 
 
 @pytest.mark.parametrize("stem", fixture_stems("mfcc_frame_runtime") or [""])
@@ -166,4 +161,4 @@ def test_mel_log_spectrum(stem, mirtoolbox_fixture, fixture_audio, assert_parity
     x = mir.audio(fixture_audio(ref))
     mel = mir.spectrum(x, frame=True, band="mel", log=True)
     expected = from_matlab_axes(ref.arrays["melspec"])
-    assert_parity(mel.data, expected, Stage.LINEAR, f"{stem}: mel log spectrum")
+    assert_parity(mel.data, expected, Stage.LINEAR, f"{stem}: mfcc_frame_runtime mel log spectrum")

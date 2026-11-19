@@ -7,11 +7,17 @@ or ``tests/data`` (the future ``py-mir-toolbox-test-data`` submodule).
 
 import json
 import os
+import re
+import subprocess
 from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
 from enum import Enum
+from functools import cache
 from pathlib import Path
 
 import numpy as np
+
+import mirpy
 
 FIXTURES_ENV = "MIRPY_FIXTURES"
 DEFAULT_FIXTURES_DIR = Path(__file__).parents[1] / "data"
@@ -24,6 +30,8 @@ DEMO_AUDIO_DIR = Path(__file__).parents[2] / "reference" / "MIRtoolbox1.8.2" / "
 REPORT_ENV = "MIRPY_PARITY_REPORT"
 DEFAULT_REPORT_PATH = Path(__file__).parents[2] / "build" / "parity_results.json"
 MATLAB_AXES = 3  # MIRtoolbox data are (element, frame, channel)
+PHASE_FILE = re.compile(r"phase(\d+)_cases\.tsv")
+REPO_ROOT = Path(__file__).parents[2]
 
 
 class Stage(Enum):
@@ -45,7 +53,13 @@ class Stage(Enum):
 
 @dataclass(frozen=True)
 class ParityResult:
-    """Agreement between a mirpy output and its MIRtoolbox reference."""
+    """Agreement between a mirpy output and its MIRtoolbox reference.
+
+    ``feature`` is the full label, ``"<stem>: <case>[ <check>]"``, e.g.
+    ``"ragtime: spectrum_frame frame starts"``; ``stem``, ``case`` and
+    ``check`` are its parts. ``phase`` and ``call`` come from the case
+    lists (``None`` for cases not listed there, e.g. pymirtoolbox ones).
+    """
 
     feature: str
     stage: str
@@ -56,6 +70,11 @@ class ParityResult:
     r: float
     agreement: float
     passed: bool
+    stem: str
+    case: str
+    check: str
+    phase: int | None
+    call: str | None
 
 
 @dataclass(frozen=True)
@@ -103,6 +122,23 @@ def read_case_outputs(path: Path) -> dict[str, int]:
     return {feature: output for feature, (_, output) in _case_rows(path).items()}
 
 
+@cache
+def case_catalog() -> dict[str, tuple[int, str]]:
+    """Return ``{case: (phase, MIRtoolbox call)}`` over every ``phase*_cases.tsv``."""
+    catalog = {}
+    for path in ALL_CASES:
+        phase = int(PHASE_FILE.fullmatch(path.name).group(1))
+        catalog.update({case: (phase, call) for case, call in read_cases(path).items()})
+    return catalog
+
+
+def split_label(label: str) -> tuple[str, str, str]:
+    """Split ``"<stem>: <case>[ <check>]"`` into ``(stem, case, check)``."""
+    stem, _, rest = label.partition(": ")
+    case, _, check = rest.partition(" ")
+    return stem, case, check
+
+
 def _case_rows(path: Path) -> dict[str, tuple[str, int]]:
     rows = {}
     for line in path.read_text().splitlines():
@@ -145,9 +181,12 @@ def compare(actual, expected, stage: Stage, feature: str) -> ParityResult:
     """Measure agreement; NaNs must sit at the same positions in both."""
     actual = np.asarray(actual, dtype=np.float64)
     expected = np.asarray(expected, dtype=np.float64)
+    stem, case, check = split_label(feature)
+    phase, call = case_catalog().get(case, (None, None))
+    labels = {"stem": stem, "case": case, "check": check, "phase": phase, "call": call}
     if actual.shape != expected.shape:
         nan = float("nan")
-        return ParityResult(feature, stage.name, False, False, nan, nan, nan, 0.0, False)
+        return ParityResult(feature, stage.name, False, False, nan, nan, nan, 0.0, False, **labels)
 
     nan_ok = bool(np.array_equal(np.isnan(actual), np.isnan(expected)))
     finite = np.isfinite(actual) & np.isfinite(expected)
@@ -166,6 +205,7 @@ def compare(actual, expected, stage: Stage, feature: str) -> ParityResult:
         r=_correlation(actual[finite], expected[finite]),
         agreement=float(np.mean(within)) if within.size else 1.0,
         passed=nan_ok and bool(np.all(within)),
+        **labels,
     )
 
 
@@ -179,9 +219,48 @@ def failure_message(result: ParityResult) -> str:
     )
 
 
-def write_report(results: list[ParityResult], path: Path) -> None:
+def run_metadata(fixtures: list[dict]) -> dict:
+    """Describe a parity run: when, which mirpy, and which MIRtoolbox/MATLAB made the fixtures.
+
+    Versions are reported as the fixtures recorded them; MIRtoolbox 1.8.2
+    calls itself 1.8.1 (its ``Contents.m`` was not updated).
+    """
+
+    def distinct(key):
+        return sorted({str(m[key]) for m in fixtures if m.get(key)})
+
+    generated = distinct("generated")
+    return {
+        "date": datetime.now(UTC).isoformat(timespec="seconds"),
+        "mirpy_version": mirpy.__version__,
+        "mirpy_commit": _git_commit(),
+        "mirtoolbox_versions": distinct("mirtoolbox_version"),
+        "matlab_versions": distinct("matlab_version"),
+        "fixture_sources": distinct("source"),
+        "audio": distinct("audio"),
+        "fixtures_generated": [generated[0], generated[-1]] if generated else [],
+    }
+
+
+def write_report(results: list[ParityResult], path: Path, run: dict) -> None:
+    """Write ``{"run": run, "results": [...]}`` as JSON."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps([asdict(r) for r in results], indent=2))
+    report = {"run": run, "results": [asdict(r) for r in results]}
+    path.write_text(json.dumps(report, indent=2))
+
+
+def _git_commit() -> str | None:
+    try:
+        out = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return out.stdout.strip()
 
 
 def _correlation(a: np.ndarray, b: np.ndarray) -> float:

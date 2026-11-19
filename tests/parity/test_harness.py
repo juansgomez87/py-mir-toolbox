@@ -3,7 +3,16 @@ import json
 import numpy as np
 import pytest
 
-from parity.harness import Stage, compare, from_matlab_axes, load_fixture, write_report
+from parity.harness import (
+    Stage,
+    case_catalog,
+    compare,
+    from_matlab_axes,
+    load_fixture,
+    run_metadata,
+    split_label,
+    write_report,
+)
 
 
 def test_from_matlab_axes_restores_trailing_singletons():
@@ -54,5 +63,43 @@ def test_fixture_and_report_round_trip(tmp_path):
     np.testing.assert_array_equal(fixture.arrays["data"], np.ones((1, 3)))
 
     report = tmp_path / "out" / "parity.json"
-    write_report([compare(np.ones(3), np.ones(3), Stage.LINEAR, "rms")], report)
-    assert json.loads(report.read_text())[0]["passed"] is True
+    result = compare(np.ones(3), np.ones(3), Stage.LINEAR, "ragtime: rms")
+    write_report([result], report, {"date": "2026-11-19"})
+    written = json.loads(report.read_text())
+    assert written["run"] == {"date": "2026-11-19"}
+    assert written["results"][0]["passed"] is True
+
+
+def test_label_parts():
+    assert split_label("ragtime: spectrum_frame frame starts") == (
+        "ragtime",
+        "spectrum_frame",
+        "frame starts",
+    )
+    assert split_label("ragtime: rms") == ("ragtime", "rms", "")
+
+
+def test_results_carry_phase_and_call_from_the_case_lists():
+    phase, call = case_catalog()["rms"]
+    assert (phase, call) == (2, "mirrms(f)")
+    result = compare(np.ones(3), np.ones(3), Stage.LINEAR, "ragtime: rms")
+    assert (result.stem, result.case, result.phase, result.call) == ("ragtime", "rms", 2, call)
+    unlisted = compare(np.ones(3), np.ones(2), Stage.LINEAR, "x: brightness_frame_runtime")
+    assert (unlisted.phase, unlisted.call, unlisted.shape_ok) == (None, None, False)
+
+
+def test_run_metadata_lists_distinct_versions():
+    fixtures = [
+        {
+            "mirtoolbox_version": "1.8.1",
+            "matlab_version": "R2026b",
+            "generated": "2026-11-18T19:00",
+        },
+        {"mirtoolbox_version": "1.8.1", "audio": "ragtime.wav", "generated": "2026-11-18T20:00"},
+    ]
+    run = run_metadata(fixtures)
+    assert run["mirtoolbox_versions"] == ["1.8.1"]
+    assert run["matlab_versions"] == ["R2026b"]
+    assert run["audio"] == ["ragtime.wav"]
+    assert run["fixtures_generated"] == ["2026-11-18T19:00", "2026-11-18T20:00"]
+    assert {"date", "mirpy_version", "mirpy_commit"} <= set(run)
