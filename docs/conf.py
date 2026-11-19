@@ -57,7 +57,7 @@ intersphinx_mapping = {
 }
 
 html_theme = "pydata_sphinx_theme"
-html_title = "py-mir-toolbox"
+html_title = f"py-mir-toolbox {version}"
 html_baseurl = SITE_URL + "docs/"
 html_theme_options = {
     "github_url": f"https://github.com/{GITHUB_REPO}",

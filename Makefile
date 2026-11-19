@@ -13,8 +13,10 @@ PARITY_JSON  := docs/parity/results.json
 
 .PHONY: docs site deploy clean parity-report
 
+# Reinstalling the package regenerates src/mirpy/_version.py from the latest
+# git tag, so the docs never show the version of an older build.
 docs:
-	uv run --group docs sphinx-build -W -b html docs docs/_build/html
+	uv run --reinstall-package py-mir-toolbox --group docs sphinx-build -W -b html docs docs/_build/html
 
 site: docs
 	rm -rf $(SITE_DIR)
