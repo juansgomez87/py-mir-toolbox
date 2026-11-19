@@ -7,8 +7,9 @@ Translated from MiningSuite ``+sig/autocor.m``, ``+sig/+autocor/``
 Lag range, in samples ``k`` (``k / sr`` seconds):
 
 - default: ``0 <= k <= min(ceil(max * sr), ceil(n / 2) - 1)``;
-- explicit bounds: ``after.m`` cuts the range again with ``round``, so
-  ``round(min_lag * sr) <= k <= round(max_lag * sr)``.
+- explicit bounds (seconds or Hz): MIRtoolbox 1.8.2 rounds both up, so
+  ``ceil(min_lag * sr) <= k <= ceil(max_lag * sr)`` (fixtures at 44.1, 22.05
+  and 11.025 kHz, 2026-11-19; MiningSuite ``after.m`` uses ``round`` instead).
 """
 
 import math
@@ -19,7 +20,7 @@ import numpy as np
 
 from mirpy.core import framing
 from mirpy.core.data import Signal
-from mirpy.core.matlab_compat import matlab_round, matlab_window, xcorr
+from mirpy.core.matlab_compat import matlab_window, xcorr
 from mirpy.core.options import FrameArg
 from mirpy.signal._lag_axis import as_frequencies
 from mirpy.signal.spectrum import Spectrum
@@ -158,9 +159,6 @@ def autocor(
     first, last = _main_lag_range(min_lag, max_lag, sampling, x.n_elements)
     if explicit_range:
         first, last = _after_lag_range(first, last, min_lag, max_lag, sampling)
-    if max_freq is not None:
-        # MIRtoolbox rounds a frequency bound up to a whole lag (fixtures, 2026-11-18)
-        first = max(first, math.ceil(round(sampling / max_freq, LAG_DIGITS)))
 
     data, window_autocor = _correlate(x, first, last, scale, generalized, window)
     normalized = bool(normal_window and window_autocor is not None)
@@ -228,11 +226,15 @@ def _main_lag_range(min_lag, max_lag, sampling, n) -> tuple[int, int]:
 
 
 def _after_lag_range(first, last, min_lag, max_lag, sampling) -> tuple[int, int]:
-    """Second cut of ``+sig/+autocor/after.m``, with MATLAB ``round``."""
-    first = max(first, int(matlab_round(min_lag * sampling)))
+    """Cut the range to explicit bounds, both rounded up to a whole lag."""
+    first = max(first, _lag_up(min_lag, sampling))
     if np.isfinite(max_lag):
-        last = min(last, int(matlab_round(max_lag * sampling)))
+        last = min(last, _lag_up(max_lag, sampling))
     return first, last
+
+
+def _lag_up(lag, sampling) -> int:
+    return math.ceil(round(lag * sampling, LAG_DIGITS))
 
 
 def _correlate(x: Signal, first, last, scale, generalized, window):

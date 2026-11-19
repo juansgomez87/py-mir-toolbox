@@ -53,23 +53,21 @@ def test_low_rate_signal_has_no_lag_limit_and_rectangular_window():
     np.testing.assert_allclose(a.data[0, :, 0], expected, rtol=1e-10)
 
 
-def test_explicit_bounds_use_matlab_round():
-    a = autocor(noise(), min_lag=0.0012, max_lag=0.0100)
-    # main.m: floor(52.92) = 52; after.m: round(52.92) = 53.
-    assert round(a.x_values[0] * SR) == 53
-    assert round(a.x_values[-1] * SR) == 441
+@pytest.mark.parametrize(
+    ("sr", "first", "last"),
+    [(44100, 53, 441), (22050, 27, 221), (11025, 14, 111)],  # MIRtoolbox 1.8.2 fixtures
+)
+def test_explicit_bounds_round_up(sr, first, last):
+    a = autocor(noise(sr=sr), min_lag=0.0012, max_lag=0.0100)
+    assert round(a.x_values[0] * sr) == first
+    assert round(a.x_values[-1] * sr) == last
 
 
 def test_frequency_bounds_convert_to_lags():
-    # MIRtoolbox 1.8.2 fixtures: 1 ms rounds to lag 44 at 44.1 kHz, but 1000 Hz
-    # (44.1 lags) rounds up to lag 45, so the Hz range starts one lag later.
     by_freq = autocor(noise(), min_freq=100, max_freq=1000)
     by_lag = autocor(noise(), min_lag=1 / 1000, max_lag=1 / 100)
-    assert by_freq.x_values[0] == pytest.approx(45 / SR)
-    np.testing.assert_allclose(by_freq.x_values, by_lag.x_values[1:])
-    raw_freq = autocor(noise(), min_freq=100, max_freq=1000, normal_window=False)
-    raw_lag = autocor(noise(), min_lag=1 / 1000, max_lag=1 / 100, normal_window=False)
-    np.testing.assert_array_equal(raw_freq.data, raw_lag.data[:, 1:])
+    assert by_freq.x_values[0] == pytest.approx(45 / SR)  # ceil(44.1)
+    np.testing.assert_array_equal(by_freq.data, by_lag.data)
 
 
 def test_window_normalisation_restarts_at_the_first_returned_lag():
