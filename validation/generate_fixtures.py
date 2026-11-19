@@ -25,13 +25,27 @@ AUDIO_SUFFIXES = {".wav", ".flac", ".aiff", ".au"}
 # Feature name -> (pymirtoolbox function, keyword arguments).
 # Add entries as pymirtoolbox exposes more MIRtoolbox operators.
 FEATURE_CALLS = {
-    "brightness_frame": ("mirbrightness", {"Frame": True}),
-    "mfcc_frame": ("mirmfcc", {"Frame": True}),
-    # "_runtime" keeps these apart from the MATLAB cases of phase2_cases.tsv
+    # "_runtime" keeps these apart from the MATLAB cases of validation/*_cases.tsv
+    "brightness_frame_runtime": ("mirbrightness", {"Frame": True}),
+    "mfcc_frame_runtime": ("mirmfcc", {"Frame": True}),
     "rolloff_frame_runtime": ("mirrolloff", {"Frame": True}),
     "zerocross_frame_runtime": ("mirzerocross", {"Frame": True}),
-    "chromagram_frame": ("mirchromagram", {"Frame": True}),
-    "tempo": ("mirtempo", {}),
+    "chromagram_frame_runtime": ("mirchromagram", {"Frame": True}),
+    "keystrength_runtime": ("mirkeystrength", {}),
+    "key_runtime": ("mirkey", {}),
+    "mode_runtime": ("mirmode", {}),
+    "tonalcentroid_frame_runtime": ("mirtonalcentroid", {"Frame": True}),
+    "hcdf_runtime": ("mirhcdf", {}),
+    "roughness_runtime": ("mirroughness", {}),
+    "regularity_frame_runtime": ("mirregularity", {"Frame": True}),
+    "pitch_frame_runtime": ("mirpitch", {"Frame": True}),
+    "inharmonicity_frame_runtime": ("mirinharmonicity", {"Frame": True}),
+    "events_runtime": ("mirevents", {}),
+    "eventdensity_runtime": ("mireventdensity", {}),
+    "tempo_runtime": ("mirtempo", {}),
+    "pulseclarity_runtime": ("mirpulseclarity", {}),
+    "fluctuation_runtime": ("mirfluctuation", {}),
+    "beatspectrum_runtime": ("mirbeatspectrum", {}),
 }
 
 

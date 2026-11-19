@@ -2,8 +2,8 @@
 
 Two fixture sources:
 
-- pymirtoolbox (``validation/generate_fixtures.py``): ``brightness_frame``,
-  ``mfcc_frame``, ``rolloff_frame_runtime``, ``zerocross_frame_runtime``.
+- pymirtoolbox (``validation/generate_fixtures.py``): ``brightness_frame_runtime``,
+  ``mfcc_frame_runtime``, ``rolloff_frame_runtime``, ``zerocross_frame_runtime``.
   Their arrays are named after the output (``brightness``, ``mfcc``, ...).
 - every feature in ``validation/phase2_cases.tsv``, generated in MATLAB by
   ``validation/mirtoolbox_fixtures.m``. The mirpy calls below must mirror
@@ -102,8 +102,8 @@ STAT_CASES = {
 
 # pymirtoolbox fixture -> (mirpy equivalent, output array name)
 RUNTIME_CASES = {
-    "brightness_frame": (lambda f: mir.brightness(audio(f), frame=True), "brightness"),
-    "mfcc_frame": (framed_mfcc, "mfcc"),
+    "brightness_frame_runtime": (lambda f: mir.brightness(audio(f), frame=True), "brightness"),
+    "mfcc_frame_runtime": (framed_mfcc, "mfcc"),
     "rolloff_frame_runtime": (lambda f: mir.rolloff(audio(f), frame=True), "rolloff"),
     "zerocross_frame_runtime": (lambda f: mir.zerocross(audio(f), frame=True), "zerocross"),
 }

@@ -2,7 +2,7 @@
 
 Two fixture sources:
 
-- ``mfcc_frame`` (pymirtoolbox): mirmfcc's second output is, per the
+- ``mfcc_frame_runtime`` (pymirtoolbox): mirmfcc's second output is, per the
   MIRtoolbox manual, "the output of mirspectrum, in mel-band and
   log-scale" (40 bands, 50 ms frames, half overlap).
 - every feature in ``validation/phase1_cases.tsv``, generated in MATLAB by
@@ -150,11 +150,11 @@ def test_matlab_peaks(
     )
 
 
-@pytest.mark.parametrize("stem", fixture_stems("mfcc_frame") or [""])
+@pytest.mark.parametrize("stem", fixture_stems("mfcc_frame_runtime") or [""])
 def test_mel_log_spectrum(stem, mirtoolbox_fixture, fixture_audio, assert_parity):
     if not stem:
         pytest.skip("no MIRtoolbox fixture available")
-    ref = mirtoolbox_fixture(stem, "mfcc_frame")
+    ref = mirtoolbox_fixture(stem, "mfcc_frame_runtime")
     x = mir.audio(fixture_audio(ref))
     mel = mir.spectrum(x, frame=True, band="mel", log=True)
     expected = from_matlab_axes(ref.arrays["melspec"])
