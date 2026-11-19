@@ -5,6 +5,10 @@ Lartillot), with two changes from the MIRtoolbox manual: bins are equally
 spaced between the minimum and maximum (MiningSuite uses ``histcounts``,
 whose automatic edges are rounded to "nice" values), and the ``'Ampli'``
 option is added. MiningSuite's ``'Integer'`` option is not ported.
+
+Each bin is closed, ``lo <= v <= hi``, so a value on an inner edge is
+counted in both bins, as in MIRtoolbox 1.8.2 (pianoA4 fixture, 2026-11-19:
+8 samples on an edge, counts summing to n + 8).
 """
 
 from dataclasses import dataclass
@@ -60,7 +64,7 @@ def histo(x: Signal, *, number: int = DEFAULT_BINS, ampli: bool = False) -> Hist
 
     See Also
     --------
-    numpy.histogram : same binning, on one array.
+    numpy.histogram : same edges, but half-open inner bins.
 
     Examples
     --------
@@ -79,9 +83,7 @@ def histo(x: Signal, *, number: int = DEFAULT_BINS, ampli: bool = False) -> Hist
         for frame in range(data.shape[FRAME_AXIS]):
             values = data[channel, :, frame]
             values = values[np.isfinite(values)]
-            counts[channel, :, frame] = np.histogram(
-                values, bins=edges, weights=values if ampli else None
-            )[0]
+            counts[channel, :, frame] = _closed_bin_counts(values, edges, ampli)
     keeps_frames = x.is_framed and not along_frames
     return Histogram(
         data=counts,
@@ -98,3 +100,10 @@ def histo(x: Signal, *, number: int = DEFAULT_BINS, ampli: bool = False) -> Hist
         params={**x.params, "histo": {"number": number, "ampli": ampli}},
         edges=edges,
     )
+
+
+def _closed_bin_counts(values: np.ndarray, edges: np.ndarray, ampli: bool) -> np.ndarray:
+    """Count (or sum) the values in each closed bin ``[edges[i], edges[i + 1]]``."""
+    in_bin = (values[None, :] >= edges[:-1, None]) & (values[None, :] <= edges[1:, None])
+    weights = values if ampli else np.ones_like(values)
+    return in_bin @ weights

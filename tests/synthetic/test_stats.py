@@ -32,9 +32,17 @@ def test_histo_of_waveform_matches_numpy():
 
 
 def test_histo_of_framed_feature_counts_over_frames():
-    h = histo(framed([0, 0, 1, 2, np.nan]), number=2)
-    np.testing.assert_array_equal(h.data.ravel(), [2, 2])
+    h = histo(framed([0, 0, 0.5, 2, np.nan]), number=2)
+    np.testing.assert_array_equal(h.data.ravel(), [3, 1])
     assert not h.is_framed
+
+
+def test_histo_counts_a_value_on_an_inner_edge_in_both_bins():
+    # MIRtoolbox 1.8.2 (pianoA4 fixture): bins are closed intervals
+    h = histo(framed([0, 0, 1, 2]), number=2)
+    np.testing.assert_array_equal(h.data.ravel(), [3, 2])
+    ampli = histo(framed([0, 0, 1, 2]), number=2, ampli=True)
+    np.testing.assert_array_equal(ampli.data.ravel(), [1, 3])
 
 
 def test_histo_ampli_sums_values():
@@ -99,6 +107,21 @@ def test_stat_period_of_sinusoidal_curve():
 def test_stat_period_is_nan_without_peak():
     s = stat(framed(np.linspace(0, 1, 20)))
     assert np.isnan(s["PeriodFreq"].data.item()) and np.isnan(s["PeriodAmp"].data.item())
+
+
+def test_stat_period_peak_can_be_the_last_lag():
+    from mirpy.stats.summary import _local_maxima
+
+    r = np.array([1.0, 0.5, -0.2, 0.1, 0.3])
+    np.testing.assert_array_equal(_local_maxima(r), [4])
+
+
+def test_stat_period_amp_is_zero_when_no_maximum_is_positive():
+    from mirpy.stats.summary import _periodicity
+
+    curve = np.array([3.0, 2, 1, 0, -1, -2, -3, -2])  # autocorrelation rises only to -0.19
+    freq, amp, _ = _periodicity(curve, FRAME_RATE)
+    assert np.isnan(freq) and amp == 0.0
 
 
 def test_stat_discards_nan_frames():
