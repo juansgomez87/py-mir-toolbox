@@ -89,7 +89,10 @@ def test_stat_period_of_sinusoidal_curve():
     curve = 1 + np.sin(2 * np.pi * 2.0 * frames / FRAME_RATE)  # 2 Hz at 40 frames/s
     s = stat(framed(curve))
     assert s["PeriodFreq"].data.item() == pytest.approx(2.0, rel=0.05)
-    assert s["PeriodAmp"].data.item() == pytest.approx(1, abs=0.05)  # pure periodic curve
+    # plain autocorrelation (no centring, no window): overlap shrinks with the lag
+    period = round(FRAME_RATE / 2.0)
+    expected = np.sum(curve[:-period] * curve[period:]) / np.sum(curve**2)
+    assert s["PeriodAmp"].data.item() == pytest.approx(expected)
     assert 0 < s["PeriodEntropy"].data.item() < 1
 
 

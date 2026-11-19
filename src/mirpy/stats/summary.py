@@ -7,8 +7,10 @@ Lartillot), but reduce along *frames* as the MIRtoolbox manual says
 average MFCC ranks together). NaN values are ignored, as ``mirstat`` does.
 
 ``stat`` is not in MiningSuite. It is written from the description of
-``mirstat`` in the MIRtoolbox manual; the ``Period*`` fields are the most
-likely to differ from MIRtoolbox and are checked against the fixtures.
+``mirstat`` in the MIRtoolbox manual. The ``Period*`` details (plain
+autocorrelation, entropy of its absolute value, frame rate from the first
+frame step) were fitted to the MIRtoolbox fixtures, where they match to
+the fifth digit.
 """
 
 import warnings
@@ -17,7 +19,6 @@ import numpy as np
 
 from mirpy.core.data import FRAME_AXIS, Signal
 from mirpy.features._common import relative_entropy
-from mirpy.signal.autocor import autocor
 
 STAT_FIELDS = ("Mean", "Std", "Slope", "PeriodFreq", "PeriodAmp", "PeriodEntropy")
 MIN_PERIOD_FRAMES = 3
@@ -108,11 +109,14 @@ def stat(x: Signal) -> dict[str, Signal]:
         - ``Mean``, ``Std``: see :func:`mean`, :func:`std`.
         - ``Slope``: least-squares slope of the curve, centred and scaled
           to unit variance, against time scaled to [-0.5, 0.5].
-        - ``PeriodFreq``: frequency (Hz) of the highest autocorrelation
-          peak of the curve, after the first descending slope from lag 0.
-          NaN when there is no peak.
+        - ``PeriodFreq``: frequency (Hz) of the highest local maximum of
+          the curve's autocorrelation (not centred, no window, all
+          lags). NaN when there is none. The lag is converted with the
+          first frame step, as MIRtoolbox does (44100/1102 Hz, not 40 Hz,
+          for 50 ms frames with half overlap at 44.1 kHz).
         - ``PeriodAmp``: that peak's height, with lag 0 scaled to 1.
-        - ``PeriodEntropy``: :func:`mirpy.entropy` of the autocorrelation.
+        - ``PeriodEntropy``: relative entropy (see :func:`mirpy.entropy`)
+          of the absolute value of that autocorrelation.
 
         An unframed feature is returned unchanged, as ``{"Mean": x}``.
 
@@ -127,7 +131,8 @@ def stat(x: Signal) -> dict[str, Signal]:
     if not x.is_framed:
         return {"Mean": x}
     curves = x.data.reshape(-1, x.n_frames)
-    periodicity = np.array([_periodicity(curve, x.frame_rate) for curve in curves])
+    rate = _frame_step_rate(x)
+    periodicity = np.array([_periodicity(curve, rate) for curve in curves])
     shape = x.data.shape[:2]
     fields = {
         "Mean": mean(x),
@@ -188,13 +193,23 @@ def _periodicity(curve: np.ndarray, frame_rate: float) -> tuple[float, float, fl
     values = curve[np.isfinite(curve)]
     if values.size < MIN_PERIOD_FRAMES:
         return np.nan, np.nan, np.nan
-    a = autocor(Signal(values.reshape(1, -1, 1), sr=frame_rate))
-    lags, r = a.x_values, a.data[0, :, 0]
-    entropy = float(relative_entropy(a.data, center=False).item())
+    r = np.correlate(values, values, mode="full")[values.size - 1 :]
+    if r[0] == 0:
+        return np.nan, np.nan, np.nan
+    r = r / r[0]
+    entropy = float(relative_entropy(np.abs(r).reshape(1, -1, 1), center=False).item())
     peak = _main_peak(r)
-    if peak is None or r[0] == 0:
+    if peak is None:
         return np.nan, np.nan, entropy
-    return 1 / lags[peak], r[peak] / r[0], entropy
+    return frame_rate / peak, r[peak], entropy
+
+
+def _frame_step_rate(x: Signal) -> float:
+    """Frames per second from the first frame step (MIRtoolbox), else the nominal rate."""
+    starts = x.frame_starts
+    if starts is None or starts.size < 2:
+        return x.frame_rate
+    return 1 / (starts[1] - starts[0])
 
 
 def _main_peak(r: np.ndarray) -> int | None:
