@@ -4,7 +4,21 @@ The parity tests compare mirpy with reference outputs ("fixtures") computed by M
 
 ## Requirements
 
-- MATLAB with the **Signal Processing** and **Statistics and Machine Learning** toolboxes (Octave does not work: MIRtoolbox fails to parse there).
+- MATLAB with these two toolboxes, the only ones MIRtoolbox 1.8.2 calls:
+
+  | Toolbox | Used for |
+  |---|---|
+  | Signal Processing Toolbox | filters (`butter`, `filtfilt`, `ellip`), `resample`, `hilbert`, `xcorr`, `spectrogram`, windows |
+  | Statistics and Machine Learning Toolbox | `pdist` (flux, hcdf, similarity matrix, novelty, segmentation, emotion), `kmeans`, `skewness`, `kurtosis` |
+
+  Check that both are installed before running (both lines must print `1`):
+
+  ```matlab
+  ~isempty(ver('signal'))
+  ~isempty(ver('stats'))
+  ```
+
+  Missing ones can be added with MATLAB's Add-On Explorer (Home → Add-Ons). Octave does not work: MIRtoolbox fails to parse there.
 - MIRtoolbox 1.8.2 in `reference/MIRtoolbox1.8.2/`.
 
 ## 1. Compute the fixtures in MATLAB
