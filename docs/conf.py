@@ -24,11 +24,29 @@ extensions = [
 ]
 
 autosummary_generate = True
+
+
+def _case_clash_filenames(names) -> dict[str, str]:
+    """Separate stub files for names that differ only by case (``audio``/``Audio``).
+
+    On case-insensitive filesystems (macOS) their stubs would overwrite each
+    other; the lowercase function gets a ``-function`` suffix.
+    """
+    lowered = [name.lower() for name in names]
+    return {
+        f"mirpy.{name}": f"mirpy.{name}-function"
+        for name in names
+        if name.islower() and lowered.count(name) > 1
+    }
+
+
+autosummary_filename_map = _case_clash_filenames(mirpy.__all__)
 numpydoc_show_class_members = False
 myst_enable_extensions = ["colon_fence", "dollarmath"]
 nb_execution_mode = "cache"
 nb_execution_timeout = 300
-exclude_patterns = ["_build", "jupyter_execute"]
+nb_render_markdown_format = "myst"  # tables in generated Markdown (Parity report)
+exclude_patterns = ["_build", "jupyter_execute", "parity_report.py"]
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),

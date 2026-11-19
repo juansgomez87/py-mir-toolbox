@@ -30,6 +30,12 @@ MIRtoolbox commands and their Python equivalents, side by side.
 Chapters in the style of the FMP notebooks. Each concept is computed from scratch in NumPy, then with mirpy, librosa and Essentia.
 :::
 
+:::{grid-item-card} Parity report
+:link: parity
+:link-type: doc
+How closely each function matches MIRtoolbox 1.8.2, and the known differences.
+:::
+
 :::{grid-item-card} Credits & citing
 :link: credits
 :link-type: doc
@@ -45,5 +51,6 @@ getting_started
 coming_from_matlab
 chapters/index
 api
+parity
 credits
 ```
