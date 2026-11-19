@@ -28,7 +28,7 @@ references:
       city: "Bordeaux"
       country: "FR"
     year: 2007
-  - type: book-section
+  - type: book
     title: "A Matlab Toolbox for Music Information Retrieval"
     authors:
       - family-names: "Lartillot"
