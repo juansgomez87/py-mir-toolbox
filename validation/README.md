@@ -15,7 +15,7 @@ The fixtures will be stored in a separate repository (`py-mir-toolbox-test-data`
 
 pymirtoolbox does not yet wrap every MIRtoolbox function. In particular it wraps none of the Phase 1 operators (`miraudio`, `mirframe`, `mirspectrum`, `mirautocor`, `mircepstrum`, `mirfilterbank`, `mirsum`, `mirpeaks`). Their fixtures come from MATLAB, as described below.
 
-## MATLAB fixtures (Phases 1 and 2)
+## MATLAB fixtures (all phases)
 
 For anyone with MATLAB and MIRtoolbox 1.8.2 on the path:
 
@@ -24,7 +24,7 @@ cd validation
 mirtoolbox_fixtures('/path/to/MIRtoolbox1.8.2/MIRToolboxDemos', 'mirtoolbox_mat')
 ```
 
-This runs each call in [`phase1_cases.tsv`](phase1_cases.tsv) (59 calls) and [`phase2_cases.tsv`](phase2_cases.tsv) (43 calls) on `ragtime.wav`, `Cmaj.wav`, `pianoA4.wav` and `trumpet.wav`, and writes one `<stem>__<feature>.mat` file per call (about 410 files). Calls that fail are listed in `mirtoolbox_mat/failures.txt` and skipped. Please send back the whole folder, including `failures.txt`, and tell us which MIRtoolbox release you used: 1.8.2's `Contents.m` still says 1.8.1, so the recorded version cannot tell them apart (the toolbox path is saved too).
+This runs each call in the seven `phase*_cases.tsv` files (222 calls: 59, 43, 23, 21, 51, 18 and 7 for phases 1 to 7) on `ragtime.wav`, `Cmaj.wav`, `pianoA4.wav` and `trumpet.wav`, and writes one `<stem>__<feature>.mat` file per call (about 890 files). Phases 5 to 7 (tempo, pulse clarity, emotion, segmentation) are slow; the whole run may take an hour or more. Calls that fail are listed in `mirtoolbox_mat/failures.txt` and skipped. Please send back the whole folder, including `failures.txt`, and tell us which MIRtoolbox release you used: 1.8.2's `Contents.m` still says 1.8.1, so the recorded version cannot tell them apart (the toolbox path is saved too).
 
 The script does not run on Octave: MIRtoolbox itself fails to parse there.
 
@@ -34,7 +34,7 @@ Then convert the files to the format the tests read:
 python validation/convert_matlab_fixtures.py --in-dir mirtoolbox_mat --out-dir validation/fixtures
 ```
 
-The `*_cases.tsv` files are the single lists of calls. `tests/parity/test_phase1.py` and `test_phase2.py` hold the mirpy equivalent of each call, and a test fails if the lists differ. Each fixture records the call that produced it, and a fixture made by a different call is rejected. `mirstat` returns a structure, so its fixtures hold one `stat_<Field>` array per field (`stat_Mean`, `stat_Std`, …) instead of `data`.
+The `*_cases.tsv` files are the single lists of calls. A line is `feature <TAB> call`, with an optional third column giving which output to save (e.g. `2` for the key clarity returned by `mirkey`). Segmented results (`mirsegment`) also hold `segment_bounds`, the start and end time of each segment. `tests/parity/test_phase1.py` and `test_phase2.py` hold the mirpy equivalent of each call (later phases get theirs when they are ported), and a test fails if the lists differ. Each fixture records the call that produced it, and a fixture made by a different call is rejected. `mirstat` returns a structure, so its fixtures hold one `stat_<Field>` array per field (`stat_Mean`, `stat_Std`, …) instead of `data`.
 
 The peak heights in the parity report appear twice, `val (normalised)` and `val (original)`. Only the passing one tells which convention MIRtoolbox uses; this pair is recorded but not asserted.
 

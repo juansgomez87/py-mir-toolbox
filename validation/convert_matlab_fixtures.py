@@ -27,6 +27,8 @@ ARRAY_FIELDS = (
     "peak_precise_pos",
     "peak_val",
     "peak_precise_val",
+    "segment_bounds",
+    "output",
 )
 STAT_PREFIX = "stat_"  # mirstat fields, e.g. stat_Mean
 TEXT_FIELDS = (

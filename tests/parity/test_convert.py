@@ -4,7 +4,16 @@ from pathlib import Path
 import numpy as np
 from scipy.io import savemat
 
-from parity.harness import PHASE1_CASES, PHASE2_CASES, load_fixture, matlab_peaks, read_cases
+from parity.harness import (
+    ALL_CASES,
+    PHASE1_CASES,
+    load_fixture,
+    matlab_peaks,
+    read_case_outputs,
+    read_cases,
+)
+
+PHASE3_CASES = ALL_CASES[2]
 
 VALIDATION = Path(__file__).parents[2] / "validation"
 
@@ -91,8 +100,22 @@ def test_stat_fields_are_converted(tmp_path):
 
 def test_case_lists_do_not_share_names():
     """The MATLAB script runs all case lists into one folder."""
-    phase1, phase2 = read_cases(PHASE1_CASES), read_cases(PHASE2_CASES)
-    assert not set(phase1) & set(phase2)
+    names = [feature for path in ALL_CASES for feature in read_cases(path)]
+    assert len(names) == len(set(names))
     pymirtoolbox = set(load_script("generate_fixtures").FEATURE_CALLS)
-    assert not (set(phase1) | set(phase2)) & pymirtoolbox
-    assert all(call.count("(") == call.count(")") for call in phase2.values())
+    assert not set(names) & pymirtoolbox
+    assert [path.name for path in ALL_CASES] == [f"phase{n}_cases.tsv" for n in range(1, 8)]
+
+
+def test_case_calls_are_well_formed():
+    for path in ALL_CASES:
+        for feature, call in read_cases(path).items():
+            assert call.count("(") == call.count(")"), (path.name, feature)
+            assert call.startswith("mir") and "f" in call, (path.name, feature)
+
+
+def test_case_output_column():
+    outputs = read_case_outputs(PHASE3_CASES)
+    assert outputs["key"] == 1 and outputs["key_clarity"] == 2
+    assert read_cases(PHASE3_CASES)["key_clarity"] == "mirkey(f)"
+    assert all(n >= 1 for path in ALL_CASES for n in read_case_outputs(path).values())

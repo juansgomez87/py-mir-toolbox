@@ -19,6 +19,7 @@ AUDIO_ENV = "MIRPY_AUDIO"
 VALIDATION_DIR = Path(__file__).parents[2] / "validation"
 PHASE1_CASES = VALIDATION_DIR / "phase1_cases.tsv"
 PHASE2_CASES = VALIDATION_DIR / "phase2_cases.tsv"
+ALL_CASES = sorted(VALIDATION_DIR.glob("phase*_cases.tsv"))
 DEMO_AUDIO_DIR = Path(__file__).parents[2] / "reference" / "MIRtoolbox1.8.2" / "MIRToolboxDemos"
 REPORT_ENV = "MIRPY_PARITY_REPORT"
 DEFAULT_REPORT_PATH = Path(__file__).parents[2] / "build" / "parity_results.json"
@@ -94,13 +95,22 @@ def load_fixture(path: Path) -> Fixture:
 
 def read_cases(path: Path = PHASE1_CASES) -> dict[str, str]:
     """Return ``{feature: MIRtoolbox call}`` from a tab-separated case list."""
-    cases = {}
+    return {feature: call for feature, (call, _) in _case_rows(path).items()}
+
+
+def read_case_outputs(path: Path) -> dict[str, int]:
+    """Return ``{feature: output number}`` (1 when the third column is absent)."""
+    return {feature: output for feature, (_, output) in _case_rows(path).items()}
+
+
+def _case_rows(path: Path) -> dict[str, tuple[str, int]]:
+    rows = {}
     for line in path.read_text().splitlines():
         line = line.strip()
         if line and not line.startswith("#"):
-            feature, call = (part.strip() for part in line.split("\t"))
-            cases[feature] = call
-    return cases
+            feature, call, *output = (part.strip() for part in line.split("\t"))
+            rows[feature] = (call, int(output[0]) if output else 1)
+    return rows
 
 
 def matlab_peaks(fixture: Fixture) -> dict[str, np.ndarray]:

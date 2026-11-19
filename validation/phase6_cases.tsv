@@ -1,0 +1,21 @@
+# Phase 6 (structure) reference calls: feature <TAB> MIRtoolbox 1.8.2 call on f [<TAB> output number].
+# Read by validation/mirtoolbox_fixtures.m. Names must be unique across all *_cases.tsv files.
+# Segmented outputs also save segment_bounds (start and end time of each segment).
+simatrix	mirsimatrix(f)
+simatrix_mfcc	mirsimatrix(mirmfcc(f,'Frame'))
+simatrix_euclidean	mirsimatrix(f,'Distance','Euclidean')
+simatrix_dissimilarity	mirsimatrix(f,'Dissimilarity')
+simatrix_exponential	mirsimatrix(f,'Similarity','exponential')
+simatrix_timelag	mirsimatrix(f,'TimeLag')
+simatrix_horizontal	mirsimatrix(f,'Horizontal')
+simatrix_width	mirsimatrix(f,'Width',50)
+novelty	mirnovelty(f)
+novelty_mfcc	mirnovelty(mirmfcc(f,'Frame'))
+novelty_kernel32	mirnovelty(f,'KernelSize',32)
+novelty_normal0	mirnovelty(f,'Normal',0)
+segment_novelty	mirsegment(f,'Novelty')
+segment_novelty_kernel32	mirsegment(f,'Novelty','KernelSize',32)
+segment_rms	mirsegment(f,'RMS')
+segment_hcdf	mirsegment(f,'HCDF')
+beatspectrum	mirbeatspectrum(f)
+beatspectrum_simatrix	mirbeatspectrum(f)	2

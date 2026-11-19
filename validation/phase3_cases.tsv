@@ -1,0 +1,26 @@
+# Phase 3 (tonality) reference calls: feature <TAB> MIRtoolbox 1.8.2 call on the audio file f [<TAB> output number].
+# The optional third column picks another output than the first, e.g. 2 for mirkey's key clarity.
+# Read by validation/mirtoolbox_fixtures.m. Names must be unique across all *_cases.tsv files.
+chromagram	mirchromagram(f)
+chromagram_frame	mirchromagram(f,'Frame')
+chromagram_nowrap	mirchromagram(f,'Wrap',0)
+chromagram_normal0	mirchromagram(f,'Frame','Normal',0)
+chromagram_res24	mirchromagram(f,'Res',24)
+chromagram_tuning	mirchromagram(f,'Tuning',264)
+chromagram_triangle	mirchromagram(f,'Triangle')
+chromagram_center	mirchromagram(f,'Center')
+keystrength	mirkeystrength(f)
+keystrength_frame	mirkeystrength(f,'Frame')
+key	mirkey(f)
+key_clarity	mirkey(f)	2
+key_frame	mirkey(f,'Frame')
+key_frame_clarity	mirkey(f,'Frame')	2
+mode	mirmode(f)
+mode_frame	mirmode(f,'Frame')
+mode_best	mirmode(f,'Best')
+mode_sum	mirmode(f,'Sum')
+tonalcentroid	mirtonalcentroid(f)
+tonalcentroid_frame	mirtonalcentroid(f,'Frame')
+hcdf	mirhcdf(f)
+keysom	mirkeysom(f)
+keysom_frame	mirkeysom(f,'Frame')

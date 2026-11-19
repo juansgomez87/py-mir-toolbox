@@ -1,0 +1,23 @@
+# Phase 4 (peak-based timbre and pitch) reference calls: feature <TAB> MIRtoolbox 1.8.2 call on f [<TAB> output number].
+# Read by validation/mirtoolbox_fixtures.m. Names must be unique across all *_cases.tsv files.
+roughness	mirroughness(f)
+roughness_vassilakis	mirroughness(f,'Vassilakis')
+roughness_min	mirroughness(f,'Min')
+roughness_normal	mirroughness(f,'Normal')
+roughness_output2	mirroughness(f)	2
+regularity	mirregularity(f)
+regularity_frame	mirregularity(f,'Frame')
+regularity_jensen	mirregularity(f,'Frame','Jensen')
+regularity_krimphoff	mirregularity(f,'Frame','Krimphoff')
+pitch	mirpitch(f)
+pitch_frame	mirpitch(f,'Frame')
+pitch_mono	mirpitch(f,'Frame','Mono')
+pitch_minmax	mirpitch(f,'Frame','Min',100,'Max',1000)
+pitch_total	mirpitch(f,'Frame','Total',3)
+pitch_cent	mirpitch(f,'Frame','Mono','Cent')
+pitch_median	mirpitch(f,'Frame','Mono','Median',0.1)
+pitch_tolonen	mirpitch(f,'Frame','Tolonen')
+pitch_autocor	mirpitch(f,'Frame')	2
+inharmonicity	mirinharmonicity(f)
+inharmonicity_frame	mirinharmonicity(f,'Frame')
+inharmonicity_f0	mirinharmonicity(f,'f0',440)

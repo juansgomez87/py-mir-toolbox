@@ -5,6 +5,10 @@ function mirtoolbox_fixtures(audio_dir, out_dir, cases_files, files)
 %   AUDIO_DIR (the MIRToolboxDemos folder) and writes one
 %   <stem>__<feature>.mat file per call and file into OUT_DIR.
 %
+%   Each line of a cases file is: feature <TAB> call [<TAB> output]. The
+%   optional output number saves another output than the first, e.g. 2
+%   for the key clarity returned by mirkey.
+%
 %   MIRTOOLBOX_FIXTURES(AUDIO_DIR, OUT_DIR, CASES_FILES, FILES) uses other
 %   lists of calls (a file name or a cell array of them) and/or a cell
 %   array of other audio file names.
@@ -13,7 +17,8 @@ function mirtoolbox_fixtures(audio_dir, out_dir, cases_files, files)
 %   element positions, frame positions, sampling rate, the peaks when
 %   there are any (1-based, one row per peak), the call, and the MATLAB
 %   and MIRtoolbox versions. For calls that return a structure (mirstat),
-%   each numeric field F is saved as stat_F instead. Convert them for the
+%   each numeric field F is saved as stat_F instead. Segmented results also
+%   hold segment_bounds (one row per segment: start and end time). Convert them for the
 %   Python tests with validation/convert_matlab_fixtures.py.
 %
 %   Requires MIRtoolbox 1.8.2 on the MATLAB path. A call that fails is
@@ -39,7 +44,7 @@ end
 mirverbose(0);
 mirwaitbar(0);
 
-cases = cell(0, 2);
+cases = cell(0, 3);
 for k = 1:numel(cases_files)
     cases = [cases; read_cases(cases_files{k})]; %#ok<AGROW>
 end
@@ -53,11 +58,14 @@ for i = 1:numel(files)
     for j = 1:size(cases, 1)
         feature = cases{j, 1};
         call = cases{j, 2};
+        output = cases{j, 3};
         try
-            result = eval(call);
-            s = describe(result);
+            outputs = cell(1, output);
+            [outputs{:}] = eval(call);
+            s = describe(outputs{output});
             s.feature = feature;
             s.call = call;
+            s.output = output;
             s.audio = files{i};
             s.matlab_version = versions.matlab;
             s.mirtoolbox_version = versions.mirtoolbox;
@@ -75,16 +83,21 @@ end
 
 
 function cases = read_cases(path)
-% Feature name and MIRtoolbox call on each non-comment line, tab-separated.
+% Feature name, MIRtoolbox call and output number (default 1) on each
+% non-comment line, tab-separated.
 lines = strsplit(fileread(path), {'\r\n', '\n'});
-cases = cell(0, 2);
+cases = cell(0, 3);
 for k = 1:numel(lines)
     line = strtrim(lines{k});
     if isempty(line) || line(1) == '#'
         continue
     end
     parts = strsplit(line, '\t');
-    cases(end + 1, :) = {strtrim(parts{1}), strtrim(parts{2})}; %#ok<AGROW>
+    output = 1;
+    if numel(parts) > 2
+        output = str2double(parts{3});
+    end
+    cases(end + 1, :) = {strtrim(parts{1}), strtrim(parts{2}), output}; %#ok<AGROW>
 end
 end
 
@@ -113,6 +126,25 @@ s.pos = unwrap(get(x, 'Pos'));
 s.framepos = unwrap(get(x, 'FramePos'));
 s.sampling = unwrap(get(x, 'Sampling'));
 s = add_peaks(s, x);
+s = add_segments(s, x);
+end
+
+
+function s = add_segments(s, x)
+% Start and end time of each segment of the first file, when there are several.
+framepos = get(x, 'FramePos');
+if ~iscell(framepos) || isempty(framepos) || ~iscell(framepos{1}) || numel(framepos{1}) < 2
+    return
+end
+segments = framepos{1};
+s.segment_bounds = zeros(numel(segments), 2);
+for k = 1:numel(segments)
+    p = segments{k};
+    while iscell(p)
+        p = p{1};
+    end
+    s.segment_bounds(k, :) = [p(1), p(end)];
+end
 end
 
 
