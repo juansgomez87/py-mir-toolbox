@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from scipy.signal import butter, ellip, freqz_sos, lfilter, sosfilt
+from scipy.signal import butter, ellip, freqz_sos, sosfilt
 
 import mirpy as mir
 from mirpy import Audio, Signal, filterbank
@@ -55,20 +55,20 @@ def test_two_channels_follows_miningsuite_order():
     x = noise(sr=sr)
     bands = filterbank(x, "2channels")
     y = x.data[0, :, 0]
-    bl, al = butter(4, np.array([70, 1000]) / (sr / 2), btype="bandpass")
-    bh, ah = butter(2, 1000 / (sr / 2), btype="highpass")
-    low = lfilter(bl, al, y)
+    low_sos = butter(4, np.array([70, 1000]) / (sr / 2), btype="bandpass", output="sos")
+    high_sos = butter(2, 1000 / (sr / 2), btype="highpass", output="sos")
+    low = sosfilt(low_sos, y)
     np.testing.assert_allclose(bands.data[0, :, 0], low)
-    np.testing.assert_allclose(bands.data[1, :, 0], lfilter(bh, ah, np.maximum(low, 0)))
+    np.testing.assert_allclose(bands.data[1, :, 0], sosfilt(high_sos, np.maximum(low, 0)))
     assert bands.channel_labels == ("low", "high")
 
 
 def test_two_channels_high_band_is_bandpass_at_high_rates():
     x = noise(sr=44100)
     high = filterbank(x, "2channels").data[1, :, 0]
-    bl, al = butter(4, np.array([70, 1000]) / 22050, btype="bandpass")
-    bh, ah = butter(2, np.array([1000, 10000]) / 22050, btype="bandpass")
-    expected = lfilter(bh, ah, np.maximum(lfilter(bl, al, x.data[0, :, 0]), 0))
+    low_sos = butter(4, np.array([70, 1000]) / 22050, btype="bandpass", output="sos")
+    high_sos = butter(2, np.array([1000, 10000]) / 22050, btype="bandpass", output="sos")
+    expected = sosfilt(high_sos, np.maximum(sosfilt(low_sos, x.data[0, :, 0]), 0))
     np.testing.assert_allclose(high, expected)
 
 

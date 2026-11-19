@@ -17,7 +17,7 @@ half-wave rectified, then high-passed at 1 kHz. Tolonen & Karjalainen
 from dataclasses import replace
 
 import numpy as np
-from scipy.signal import butter, ellip, lfilter, sosfilt
+from scipy.signal import butter, ellip, sosfilt
 
 from mirpy._vendor import auditory_toolbox
 from mirpy.core import framing
@@ -153,19 +153,24 @@ def _gammatone(y, sr, n_channels, lowest):
 
 
 def _two_channels(y, sr):
+    # Second-order sections: the 70 Hz edge is close to 0 Hz at audio rates,
+    # where the (b, a) form amplifies round-off (filterbank probe, 2026-11-19).
     nyquist = sr / 2
-    low_b, low_a = butter(
-        TWO_CHANNEL_LOW_ORDER, np.array(TWO_CHANNEL_LOW_BAND) / nyquist, btype="bandpass"
+    low_sos = butter(
+        TWO_CHANNEL_LOW_ORDER,
+        np.array(TWO_CHANNEL_LOW_BAND) / nyquist,
+        btype="bandpass",
+        output="sos",
     )
     if sr < TWO_CHANNEL_WIDE_RATE:
-        high_b, high_a = butter(
-            TWO_CHANNEL_HIGH_ORDER, TWO_CHANNEL_HIGH_EDGE / nyquist, btype="highpass"
+        high_sos = butter(
+            TWO_CHANNEL_HIGH_ORDER, TWO_CHANNEL_HIGH_EDGE / nyquist, btype="highpass", output="sos"
         )
     else:
         edges = np.array([TWO_CHANNEL_HIGH_EDGE, TWO_CHANNEL_HIGH_TOP]) / nyquist
-        high_b, high_a = butter(TWO_CHANNEL_HIGH_ORDER, edges, btype="bandpass")
-    low = lfilter(low_b, low_a, y)
-    high = lfilter(high_b, high_a, np.maximum(low, 0))
+        high_sos = butter(TWO_CHANNEL_HIGH_ORDER, edges, btype="bandpass", output="sos")
+    low = sosfilt(low_sos, y)
+    high = sosfilt(high_sos, np.maximum(low, 0))
     return np.stack([low, high]), ["low", "high"]
 
 
