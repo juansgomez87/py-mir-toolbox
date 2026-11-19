@@ -246,7 +246,7 @@ def write_report(results: list[ParityResult], path: Path, run: dict) -> None:
     """Write ``{"run": run, "results": [...]}`` as JSON."""
     path.parent.mkdir(parents=True, exist_ok=True)
     report = {"run": run, "results": [asdict(r) for r in results]}
-    path.write_text(json.dumps(report, indent=2))
+    path.write_text(json.dumps(report, separators=(",", ":")))  # compact: committed snapshot
 
 
 def _git_commit() -> str | None:
