@@ -15,4 +15,5 @@ The chapter ends by explaining where the numbers differ and why.
 B_basics
 C3_dynamics
 C4a_spectral_shape
+C4b_mfcc_flux_statistics
 ```
