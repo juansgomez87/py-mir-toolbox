@@ -17,6 +17,13 @@ has a neighbour on both sides and leaves the first and last positions as
 they are, so mirpy does the same.
 - ``normalize="global"`` scales by the minimum and maximum of the whole
   signal, all channels and frames together.
+
+Found with the MIRtoolbox fixtures (2026-11-19): ``'Reso'`` decides which
+of two close peaks is "higher" from the values of the *first* curve (first
+frame of the first channel), in every frame. With that rule mirpy matches
+all 166 ragtime spectrum frames; with each frame's own values, 107 frames
+differ. A single-curve probe (``validation/reso_probe.mat``) confirmed the
+higher-wins rule itself. Multi-channel input is not verified.
 """
 
 from dataclasses import dataclass, replace
@@ -99,7 +106,8 @@ def peaks(
         its two neighbours. MATLAB ``'Interpol'``.
     reso : float, optional
         Remove peaks closer than `reso` (in units of the searched axis) to
-        a higher peak. MATLAB ``'Reso'``.
+        a higher peak. MATLAB ``'Reso'``. As in MIRtoolbox, "higher" is
+        judged on the first curve (first frame) for every frame.
     reso_first : bool
         With `reso`, keep the earlier of two close peaks instead of the
         higher one. MATLAB ``'First'``.
@@ -156,7 +164,8 @@ def peaks(
     with np.errstate(invalid="ignore", divide="ignore"):
         curves = (curves - offset) / scale
 
-    rows = [_curve_peaks(curve, positions, options) for curve in curves]
+    reso_heights = curves[0]  # MIRtoolbox ranks close peaks on the first curve
+    rows = [_curve_peaks(curve, positions, options, reso_heights) for curve in curves]
     found = [
         (channel, frame, *row) for channel, frame, row in zip(channels, frames, rows, strict=True)
     ]
@@ -192,7 +201,7 @@ def _global_scaling(curves: np.ndarray) -> tuple[float, float]:
     return low, high - low
 
 
-def _curve_peaks(y: np.ndarray, x: np.ndarray, o: _SearchOptions):
+def _curve_peaks(y: np.ndarray, x: np.ndarray, o: _SearchOptions, reso_heights: np.ndarray):
     """Search one curve (``search`` in ``peaks.m``).
 
     Returns 0-based indices, positions, heights on the normalised scale,
@@ -214,7 +223,7 @@ def _curve_peaks(y: np.ndarray, x: np.ndarray, o: _SearchOptions):
     if candidates.size and o.contrast:
         candidates = _select_contrasted(padded, candidates, o.contrast, o.select_first)
     if candidates.size and o.reso:
-        candidates = _remove_close(padded, x, candidates, o.reso, o.reso_first)
+        candidates = _remove_close(reso_heights, x, candidates, o.reso, o.reso_first)
     candidates = _sort(padded, candidates, o.total, o.order)
 
     if o.interpolate:
@@ -268,9 +277,9 @@ def _select_contrasted(padded, candidates, contrast, select_first) -> np.ndarray
     return np.array(selected, dtype=np.intp)
 
 
-def _remove_close(padded, x, candidates, reso, reso_first) -> np.ndarray:
-    """Remove peaks closer than `reso` to a higher one (``'Reso'``)."""
-    candidates = candidates[np.argsort(-padded[candidates + 1], kind="stable")]
+def _remove_close(heights, x, candidates, reso, reso_first) -> np.ndarray:
+    """Remove peaks closer than `reso` to one higher in `heights` (``'Reso'``)."""
+    candidates = candidates[np.argsort(-heights[candidates], kind="stable")]
     removed = set()
     for j in range(len(candidates) - 1):
         for k in range(j + 1, len(candidates)):

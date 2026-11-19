@@ -268,3 +268,15 @@ def test_plot_marks_peaks():
     markers = ax.get_lines()[1]
     np.testing.assert_allclose(markers.get_xdata(), [3, 1])
     np.testing.assert_allclose(markers.get_ydata(), [2, 1])
+
+
+def test_reso_ranks_close_peaks_on_the_first_frame():
+    # Two close peaks: the left one is higher in frame 0, the right one in frame 1.
+    first = np.array([0, 1.0, 0, 0.8, 0, 0, 0])
+    second = np.array([0, 0.8, 0, 1.0, 0, 0, 0])
+    x = Signal(
+        np.stack([first, second], axis=-1)[None], sr=SR, x_values=np.arange(7.0), frame_rate=1
+    )
+    p = peaks(x, reso=3.0, contrast=0.0)
+    kept = {int(f): int(i) for f, i in zip(p.peaks.frame, p.peaks.index, strict=True)}
+    assert kept == {0: 1, 1: 1}  # MIRtoolbox: frame 1 keeps the peak that was higher in frame 0
