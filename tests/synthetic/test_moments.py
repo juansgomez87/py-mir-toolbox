@@ -108,3 +108,13 @@ def test_min_rms_gives_nan_on_quiet_frames():
         values = operator(s).data[0, 0]
         assert np.isnan(values[1]) and not np.isnan(values[[0, 2]]).any(), operator.__name__
         assert not np.isnan(operator(s, min_rms=0).data).any(), operator.__name__
+
+
+def test_skewness_and_kurtosis_are_nan_where_spread_is():
+    data = np.ones((1, 64, 3))
+    data[0, 10, :] = 50
+    data[:, :, 1] *= 1e-4
+    s = Spectrum(data, sr=SR, x_values=np.arange(64) * 10.0)
+    gated = np.isnan(spread(s).data)
+    for operator in (skewness, kurtosis):
+        np.testing.assert_array_equal(np.isnan(operator(s).data), gated, operator.__name__)

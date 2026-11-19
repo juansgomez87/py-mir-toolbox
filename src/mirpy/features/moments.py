@@ -13,6 +13,8 @@ Olivier Lartillot). Changes made to follow the MIRtoolbox manual:
   overestimate" of the centroid reported by Kazazis et al. 2017).
 - The ``'MinRMS'`` and ``'MaxEntropy'`` gates, absent from MiningSuite,
   are written from the manual; see :func:`mirpy.features._common.quiet_frames`.
+- Skewness and kurtosis are NaN wherever the spread is (its ``'MinRMS'``
+  gate), as in the MIRtoolbox 1.8.2 fixtures of all four demo files.
 """
 
 import numpy as np
@@ -141,10 +143,11 @@ def skewness(x: Signal, *, frame: FrameArg = False) -> Signal:
     Returns
     -------
     Signal
-        One value per channel and frame.
+        One value per channel and frame. NaN where :func:`spread` is NaN.
     """
     d = as_distribution(x, frame)
     values = _standard_moment(d.data, d.x_values, 3)
+    values[quiet_frames(d, SPREAD_MIN_RMS)] = np.nan
     return with_params(feature_signal(d, values, _name(d, "skewness")), "skewness", {})
 
 
@@ -166,10 +169,11 @@ def kurtosis(x: Signal, *, frame: FrameArg = False) -> Signal:
     Returns
     -------
     Signal
-        One value per channel and frame.
+        One value per channel and frame. NaN where :func:`spread` is NaN.
     """
     d = as_distribution(x, frame)
     values = _standard_moment(d.data, d.x_values, 4)
+    values[quiet_frames(d, SPREAD_MIN_RMS)] = np.nan
     return with_params(feature_signal(d, values, _name(d, "kurtosis")), "kurtosis", {})
 
 
