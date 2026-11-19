@@ -5,6 +5,7 @@ type: software
 authors:
   - family-names: "Gómez-Cañón"
     given-names: "Juan Sebastián"
+    orcid: "https://orcid.org/0000-0002-2544-6311"
 license: BSD-3-Clause
 repository-code: "https://github.com/juansgomez87/py-mir-toolbox"
 url: "https://ccrma.stanford.edu/~jsgomezc/py-mir-toolbox"
