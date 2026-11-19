@@ -21,9 +21,9 @@ Optional extras: `py-mir-toolbox[export]` (pandas, for `mir.to_dataframe`), `py-
 ```python
 import mirpy as mir
 
-a = mir.audio("song.wav")                 # a = miraudio('song.wav')
-rms = mir.rms(a, frame=True)              # mirrms(a, 'Frame')
-mir.stat(mir.centroid(a, frame=True))     # mirstat(mircentroid(a, 'Frame'))
+a = mir.audio("song.wav")  # a = miraudio('song.wav')
+rms = mir.rms(a, frame=True)  # mirrms(a, 'Frame')
+mir.stat(mir.centroid(a, frame=True))  # mirstat(mircentroid(a, 'Frame'))
 
 # One row per file of a folder, saved for R, SPSS or JASP
 features = {"rms": mir.rms, "centroid": lambda a: mir.centroid(a, frame=True)}
