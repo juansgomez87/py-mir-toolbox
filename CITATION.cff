@@ -2,6 +2,7 @@ cff-version: 1.2.0
 message: "If you use py-mir-toolbox, please cite it and the original MIRtoolbox papers listed under references."
 title: "py-mir-toolbox: a Python port of MIRtoolbox"
 type: software
+doi: "10.5281/zenodo.24380735"
 authors:
   - family-names: "Gómez-Cañón"
     given-names: "Juan Sebastián"
