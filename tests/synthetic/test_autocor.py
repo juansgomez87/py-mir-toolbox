@@ -5,6 +5,7 @@ import pytest
 
 from mirpy import Audio, Autocor, autocor, frame, peaks, spectrum
 from mirpy.core.matlab_compat import matlab_window, xcorr
+from mirpy.signal.autocor import hanning_autocor
 
 SR = 44100
 
@@ -128,8 +129,9 @@ def test_generalized_autocorrelation():
     y = x.data[0, :, 0] - x.data[0, :, 0].mean()
     y = y * matlab_window("hanning", 1000)
     expected = np.fft.ifft(np.abs(np.fft.fft(y)) ** 0.67).real[: a.n_elements]
+    expected = expected / hanning_autocor(np.arange(a.n_elements), 1000)
     np.testing.assert_allclose(a.data[0, :, 0], expected, atol=1e-12)
-    assert not a.normalized
+    assert a.normalized
 
 
 def test_framed_input():

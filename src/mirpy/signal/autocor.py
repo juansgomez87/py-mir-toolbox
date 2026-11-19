@@ -102,8 +102,8 @@ def autocor(
         Exponent ``k`` of the generalized autocorrelation
         ``ifft(abs(fft(x)) ** k)`` (Tolonen & Karjalainen, 2000). 2 is the
         ordinary autocorrelation. MATLAB ``'Generalized'`` / ``'Compres'``
-        (``'Compres'`` alone means 0.67). With ``k != 2`` there is no
-        window normalisation and `scale` is ignored.
+        (``'Compres'`` alone means 0.67). With ``k != 2``, `scale` is
+        ignored; the window normalisation still applies, as in MIRtoolbox.
     window : str or None
         Window applied to each frame. Default: MATLAB ``hanning`` for
         audio sampled at 1 kHz or more, rectangular below; none for a
@@ -241,17 +241,17 @@ def _correlate(x: Signal, first, last, scale, generalized, window):
     taper = None if window is None else matlab_window(window, x.n_elements)
     if taper is not None:
         data = data * taper[None, :, None]
+    lags = slice(last + first, 2 * last + 1)  # lag k sits at index last + k of xcorr(.., last)
     if generalized != STANDARD_EXPONENT:
         magnitude = np.abs(np.fft.fft(data, axis=1)) ** generalized
-        return np.fft.ifft(magnitude, axis=1).real[:, first : last + 1], None
-
-    lags = slice(last + first, 2 * last + 1)  # lag k sits at index last + k of xcorr(.., last)
-    if scale == "coeff_x_channels":
+        c = np.fft.ifft(magnitude, axis=1).real[:, first : last + 1]
+    elif scale == "coeff_x_channels":
         # Each channel is divided by lag 0 of the sum of all channels.
         energy = xcorr(data.sum(axis=0, keepdims=True), 0, "none", axis=1)
         c = xcorr(data, last, "none", axis=1)[:, lags] / energy
     else:
         c = xcorr(data, last, scale, axis=1)[:, lags]
+    # MIRtoolbox normalises the generalized autocorrelation by the window too (fixtures)
     window_autocor = None
     if window == "hanning":
         # Quirk: indexed by position in the returned range, not by the actual lag
